@@ -1,0 +1,15 @@
+{
+  "name": "paw-project-kriya",
+  "version": "1.0.0",
+  "description": "Kriya - etalase batik & tenun. Express.js (MVC), EJS, Tailwind CDN.",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node --watch app.js"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "express": "^4.21.2"
+  }
+}
