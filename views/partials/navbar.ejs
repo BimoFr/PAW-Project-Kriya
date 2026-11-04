@@ -1,0 +1,28 @@
+<header class="sticky top-0 z-40 bg-paper/90 backdrop-blur border-b border-line">
+  <nav class="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between" aria-label="Navigasi utama">
+    <a href="/" class="flex items-center gap-2.5 font-display font-semibold text-xl tracking-tight" aria-label="<%= appName %> — beranda">
+      <span class="grid place-items-center w-7 h-7 rounded-md bg-ink text-paper text-sm font-bold" aria-hidden="true">K</span>
+      <%= appName %>
+    </a>
+
+    <div class="hidden md:flex items-center gap-8 text-sm font-medium">
+      <a href="/#produk" class="navlink">Produk</a>
+      <a href="/api/produk" class="navlink">API produk</a>
+      <a href="/api/status" class="navlink">API status</a>
+    </div>
+
+    <button id="menu-btn" type="button" class="md:hidden -mr-2 p-2 rounded-lg hover:bg-ink/5 transition-colors"
+            aria-expanded="false" aria-controls="menu-mobile" aria-label="Buka menu">
+      <svg id="ico-open" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      <svg id="ico-close" class="hidden" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </nav>
+
+  <div id="menu-mobile" class="hidden md:hidden border-t border-line bg-paper">
+    <div class="max-w-6xl mx-auto px-5 sm:px-8 py-3 flex flex-col text-sm font-medium">
+      <a href="/#produk" class="py-3 border-b border-line">Produk</a>
+      <a href="/api/produk" class="py-3 border-b border-line">API produk</a>
+      <a href="/api/status" class="py-3">API status</a>
+    </div>
+  </div>
+</header>

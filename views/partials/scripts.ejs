@@ -1,0 +1,86 @@
+<script>
+  // ---------- Menu mobile ----------
+  (function () {
+    var btn = document.getElementById('menu-btn');
+    var menu = document.getElementById('menu-mobile');
+    if (!btn || !menu) return;
+    btn.addEventListener('click', function () {
+      var open = menu.classList.toggle('hidden') === false;
+      btn.setAttribute('aria-expanded', String(open));
+      btn.setAttribute('aria-label', open ? 'Tutup menu' : 'Buka menu');
+      document.getElementById('ico-open').classList.toggle('hidden', open);
+      document.getElementById('ico-close').classList.toggle('hidden', !open);
+    });
+    menu.querySelectorAll('a').forEach(function (a) {
+      a.addEventListener('click', function () { if (!menu.classList.contains('hidden')) btn.click(); });
+    });
+  })();
+
+  // ---------- Status server (GET /api/status) ----------
+  (function () {
+    var out = document.getElementById('status-json');
+    var label = document.getElementById('status-label');
+    var dot = document.getElementById('status-dot');
+    if (!out) return;
+
+    function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+
+    function render(obj) {
+      var rows = Object.keys(obj).map(function (k, i, arr) {
+        var v = obj[k];
+        var val = typeof v === 'string'
+          ? '<span class="text-[#F0B58E]">"' + esc(v) + '"</span>'
+          : '<span class="text-[#F0B58E]">' + esc(v) + '</span>';
+        return '  <span class="text-[#9DB0CC]">"' + esc(k) + '"</span>: ' + val + (i < arr.length - 1 ? ',' : '');
+      });
+      out.innerHTML = '{\n' + rows.join('\n') + '\n}';
+    }
+
+    function setOnline(ok) {
+      label.textContent = ok ? 'Server berjalan' : 'Tidak terhubung';
+      dot.className = 'w-2 h-2 rounded-full ' + (ok ? 'bg-[#E0A458] dot-live' : 'bg-[#C46A5A]');
+    }
+
+    function load() {
+      fetch('/api/status')
+        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then(function (data) { render(data); setOnline(true); })
+        .catch(function () { setOnline(false); out.textContent = '{\n  "error": "Gagal memuat /api/status"\n}'; });
+    }
+
+    load();
+    setInterval(load, 10000);
+  })();
+
+  // ---------- Filter kategori ----------
+  (function () {
+    var chips = document.querySelectorAll('[data-filter]');
+    var cards = document.querySelectorAll('[data-kategori]');
+    var jumlah = document.getElementById('jumlah');
+    if (!chips.length) return;
+
+    chips.forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        var f = chip.getAttribute('data-filter');
+        chips.forEach(function (c) {
+          var aktif = c === chip;
+          c.setAttribute('aria-pressed', String(aktif));
+          c.classList.toggle('bg-ink', aktif);
+          c.classList.toggle('text-paper', aktif);
+          c.classList.toggle('border-ink', aktif);
+        });
+
+        var n = 0;
+        cards.forEach(function (card) {
+          var tampil = f === 'semua' || card.getAttribute('data-kategori') === f;
+          card.classList.remove('fade');
+          card.hidden = !tampil;
+          if (tampil) { n++; void card.offsetWidth; card.classList.add('fade'); }
+        });
+        if (jumlah) jumlah.textContent = n + ' produk';
+      });
+    });
+  })();
+</script>
+</body>
+</html>

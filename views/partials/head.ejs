@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> — <%= appName %></title>
+  <meta name="description" content="<%= appName %>: etalase digital batik dan tenun karya pengrajin Nusantara.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231A2233'/%3E%3Ctext x='16' y='23' font-size='20' font-weight='700' text-anchor='middle' fill='%23F5F1EA' font-family='sans-serif'%3EK%3C/text%3E%3C/svg%3E">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            paper: '#F5F1EA',
+            ink: '#1A2233',
+            muted: '#5B6475',
+            line: '#DDD6CA',
+            soga: { DEFAULT: '#A8481F', dark: '#8A3A18' }
+          },
+          fontFamily: {
+            display: ['"Bricolage Grotesque"', 'system-ui', 'sans-serif'],
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    :focus-visible { outline: 2px solid #A8481F; outline-offset: 3px; border-radius: 6px; }
+    ::selection { background: #A8481F; color: #fff; }
+
+    /* Link navigasi: garis bawah halus saat hover */
+    .navlink { position: relative; padding: .25rem 0; }
+    .navlink::after {
+      content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 1.5px;
+      background: currentColor; transform: scaleX(0); transform-origin: left;
+      transition: transform .25s ease;
+    }
+    .navlink:hover::after, .navlink:focus-visible::after { transform: scaleX(1); }
+
+    /* Pola motif kartu produk (CSS murni, tanpa gambar) */
+    .kat-batik  { --m-bg: #E4E8F0; --m-fg: rgba(26, 34, 51, .30); }
+    .kat-tenun  { --m-bg: #EEE1D0; --m-fg: rgba(168, 72, 31, .38); }
+    .motif { background-color: var(--m-bg); }
+    .motif-parang { background-image: repeating-linear-gradient(135deg, transparent 0 13px, var(--m-fg) 13px 15px); }
+    .motif-mega   { background-image: repeating-radial-gradient(circle at 50% 130%, transparent 0 9px, var(--m-fg) 9px 11px); }
+    .motif-kawung {
+      background-image:
+        radial-gradient(circle, transparent 0 7px, var(--m-fg) 7.5px 9px, transparent 9.5px),
+        radial-gradient(circle, transparent 0 7px, var(--m-fg) 7.5px 9px, transparent 9.5px);
+      background-size: 28px 28px; background-position: 0 0, 14px 14px;
+    }
+    .motif-lurik  { background-image: repeating-linear-gradient(90deg, transparent 0 10px, var(--m-fg) 10px 12px, transparent 12px 22px, var(--m-fg) 22px 23px); }
+    .motif-ikat {
+      background-image:
+        linear-gradient(135deg, var(--m-fg) 25%, transparent 25%),
+        linear-gradient(225deg, var(--m-fg) 25%, transparent 25%),
+        linear-gradient(315deg, var(--m-fg) 25%, transparent 25%),
+        linear-gradient(45deg,  var(--m-fg) 25%, transparent 25%);
+      background-size: 24px 24px;
+      background-position: -12px 0, -12px 0, 0 0, 0 0;
+    }
+
+    /* Animasi ringan */
+    @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    .rise { animation: rise .6s ease both; }
+    .rise-2 { animation-delay: .08s; }
+    .rise-3 { animation-delay: .16s; }
+    @keyframes fade { from { opacity: 0; transform: scale(.98); } to { opacity: 1; transform: none; } }
+    .fade { animation: fade .3s ease both; }
+    @keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+    .dot-live { animation: pulse-dot 2s ease-in-out infinite; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+    }
+  </style>
+</head>
+<body class="bg-paper text-ink font-sans antialiased min-h-screen flex flex-col">
+  <a href="#konten" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:bg-ink focus:text-paper focus:px-4 focus:py-2 focus:rounded-lg">Lewati ke konten</a>
