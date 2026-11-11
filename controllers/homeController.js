@@ -1,11 +1,20 @@
 const produkModel = require('../models/produkModel');
+const asyncHandler = require('../utils/asyncHandler');
 
-function index(req, res) {
+const index = asyncHandler(async (req, res) => {
   res.render('index', {
     title: 'Beranda',
-    produk: produkModel.getAll(),
-    kategori: produkModel.getKategori(),
+    produk: await produkModel.getAll(),
+    kategori: produkModel.KATEGORI,
+  });
+});
+
+function kelola(req, res) {
+  res.render('kelola', {
+    title: 'Kelola produk',
+    kategori: produkModel.KATEGORI,
+    motif: produkModel.MOTIF,
   });
 }
 
-module.exports = { index };
+module.exports = { index, kelola };
