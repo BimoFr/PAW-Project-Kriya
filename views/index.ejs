@@ -24,21 +24,18 @@
       </div>
 
       <!-- Kartu status (data hidup dari /api/status) -->
+       <!-- Motif pilihan -->
       <div class="lg:col-span-5 rise rise-3">
-        <div class="bg-ink text-paper rounded-2xl p-6 sm:p-7">
-          <div class="flex items-center justify-between gap-4 font-mono text-[13px]">
-            <span class="font-medium">GET /api/status</span>
-            <span class="flex items-center gap-2 text-[#C9D2E0]">
-              <span id="status-dot" class="w-2 h-2 rounded-full bg-[#E0A458] dot-live"></span>
-              <span id="status-label">Memuat…</span>
-            </span>
-          </div>
-          <pre id="status-json" class="mt-5 font-mono text-[13px] leading-relaxed text-[#C9D2E0] overflow-x-auto whitespace-pre" aria-live="polite">{
-  "status": "…"
-}</pre>
+        <div class="grid grid-cols-2 gap-3 pb-6">
+          <% [['parang','batik','Parang'],['kawung','batik','Kawung'],['lurik','tenun','Lurik'],['ikat','tenun','Ikat']].forEach(function (m) { %>
+            <div class="group relative aspect-square overflow-hidden rounded-xl border border-line even:translate-y-6">
+              <div class="motif motif-<%= m[0] %> kat-<%= m[1] %> w-full h-full transition-transform duration-500 group-hover:scale-105"></div>
+              <span class="absolute left-3 bottom-3 bg-paper text-ink text-xs font-medium px-2.5 py-1 rounded-full"><%= m[2] %></span>
+            </div>
+          <% }) %>
         </div>
+        <p class="mt-2 text-sm text-muted"><%= produk.length %> produk · motif klasik Nusantara</p>
       </div>
-    </div>
   </section>
 
   <!-- Produk -->
