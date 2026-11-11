@@ -1,0 +1,111 @@
+<script>
+  // ---------- Kelola produk: CRUD lewat /api/produk ----------
+  (function () {
+    var daftar = document.getElementById('daftar');
+    var dlgForm = document.getElementById('dlg-form');
+    var dlgHapus = document.getElementById('dlg-hapus');
+    var form = document.getElementById('form');
+    var errBox = document.getElementById('form-error');
+    var toast = document.getElementById('toast');
+    var data = [], editId = null, hapusId = null, toastTimer;
+
+    function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+    function rp(n) { return 'Rp ' + Number(n).toLocaleString('id-ID'); }
+
+    function api(url, opt) {
+      return fetch(url, opt).then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (b) {
+          if (!r.ok) { var e = new Error(b.error || 'Permintaan gagal'); e.detail = b.detail; throw e; }
+          return b;
+        });
+      });
+    }
+
+    function notif(teks) {
+      toast.textContent = teks; toast.classList.remove('hidden');
+      clearTimeout(toastTimer); toastTimer = setTimeout(function () { toast.classList.add('hidden'); }, 3000);
+    }
+
+    function baris(p) {
+      var kat = p.kategori.toLowerCase();
+      return '<div class="fade flex flex-col sm:flex-row sm:items-center gap-4 py-5 border-b border-line">' +
+        '<div class="motif motif-' + esc(p.motif) + ' kat-' + esc(kat) + ' w-14 h-14 rounded-lg shrink-0" aria-hidden="true"></div>' +
+        '<div class="flex-1 min-w-0"><p class="font-display font-semibold leading-snug">' + esc(p.nama) + '</p>' +
+        '<p class="text-sm text-muted">' + esc(p.kategori) + ' · ' + esc(p.motif) + ' · stok ' + esc(p.stok) + '</p></div>' +
+        '<p class="font-semibold sm:w-32 sm:text-right">' + rp(p.harga) + '</p>' +
+        '<div class="flex gap-2">' +
+        '<button type="button" data-aksi="ubah" data-id="' + p.id + '" class="px-4 py-2 rounded-lg border border-line text-sm font-medium transition-colors hover:border-ink">Ubah</button>' +
+        '<button type="button" data-aksi="hapus" data-id="' + p.id + '" class="px-4 py-2 rounded-lg border border-line text-sm font-medium text-soga transition-colors hover:border-soga">Hapus</button>' +
+        '</div></div>';
+    }
+
+    function render() {
+      daftar.innerHTML = data.length ? data.map(baris).join('') : '<p class="py-12 text-muted">Belum ada produk. Klik “Tambah produk” untuk memulai.</p>';
+    }
+
+    function muat() {
+      return api('/api/produk').then(function (rows) { data = rows; render(); })
+        .catch(function () { daftar.innerHTML = '<p class="py-12 text-muted">Gagal memuat data dari server.</p>'; });
+    }
+
+    function bukaForm(p) {
+      editId = p ? p.id : null;
+      document.getElementById('form-judul').textContent = p ? 'Ubah produk' : 'Tambah produk';
+      form.reset(); errBox.classList.add('hidden');
+      if (p) ['nama', 'kategori', 'motif', 'harga', 'stok', 'deskripsi'].forEach(function (k) { form.elements[k].value = p[k]; });
+      dlgForm.showModal();
+      form.elements.nama.focus();
+    }
+
+    function tampilError(daftarError) {
+      errBox.innerHTML = daftarError.map(function (e) { return '<li>' + esc(e) + '</li>'; }).join('');
+      errBox.classList.remove('hidden');
+    }
+
+    document.getElementById('btn-tambah').addEventListener('click', function () { bukaForm(null); });
+    document.getElementById('btn-batal').addEventListener('click', function () { dlgForm.close(); });
+    document.getElementById('hapus-batal').addEventListener('click', function () { dlgHapus.close(); });
+
+    // Klik di luar dialog menutupnya
+    [dlgForm, dlgHapus].forEach(function (d) {
+      d.addEventListener('click', function (e) { if (e.target === d) d.close(); });
+    });
+
+    daftar.addEventListener('click', function (e) {
+      var btn = e.target.closest('button[data-aksi]');
+      if (!btn) return;
+      var p = data.find(function (x) { return x.id === Number(btn.dataset.id); });
+      if (!p) return;
+      if (btn.dataset.aksi === 'ubah') bukaForm(p);
+      else { hapusId = p.id; document.getElementById('hapus-nama').textContent = p.nama; dlgHapus.showModal(); }
+    });
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var f = form.elements;
+      var payload = {
+        nama: f.nama.value.trim(), kategori: f.kategori.value, motif: f.motif.value,
+        harga: f.harga.value, stok: f.stok.value, deskripsi: f.deskripsi.value.trim()
+      };
+      var simpan = document.getElementById('btn-simpan');
+      simpan.disabled = true;
+      api(editId ? '/api/produk/' + editId : '/api/produk', {
+        method: editId ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(function () {
+        dlgForm.close(); notif(editId ? 'Produk berhasil diperbarui' : 'Produk berhasil ditambahkan'); return muat();
+      }).catch(function (err) {
+        tampilError(err.detail && err.detail.length ? err.detail : [err.message]);
+      }).then(function () { simpan.disabled = false; });
+    });
+
+    document.getElementById('hapus-ok').addEventListener('click', function () {
+      api('/api/produk/' + hapusId, { method: 'DELETE' })
+        .then(function () { dlgHapus.close(); notif('Produk berhasil dihapus'); return muat(); })
+        .catch(function (err) { dlgHapus.close(); notif(err.message); });
+    });
+
+    muat();
+  })();
+</script>

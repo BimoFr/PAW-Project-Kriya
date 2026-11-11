@@ -48,8 +48,7 @@
         <div>
           <h2 class="font-display font-semibold tracking-tight text-3xl sm:text-4xl">Koleksi minggu ini</h2>
           <p class="mt-2 text-muted">
-            Data diambil dari <code class="font-mono text-[13px] bg-ink/5 px-1.5 py-0.5 rounded">models/produkModel.js</code>
-            · <span id="jumlah"><%= produk.length %> produk</span>
+            Data diambil dari database · <span id="jumlah"><%= produk.length %> produk</span>
           </p>
         </div>
 
@@ -63,6 +62,9 @@
         </div>
       </div>
 
+      <% if (!produk.length) { %>
+        <p class="mt-10 py-12 text-muted">Belum ada produk. <a href="/kelola" class="text-soga font-medium navlink">Tambah produk pertama</a>.</p>
+      <% } %>
       <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <% produk.forEach(function (p) { %>
           <article data-kategori="<%= p.kategori.toLowerCase() %>"
@@ -91,23 +93,51 @@
   <section id="api" class="border-t border-line scroll-mt-16">
     <div class="max-w-6xl mx-auto px-5 sm:px-8 py-16 sm:py-20">
       <h2 class="font-display font-semibold tracking-tight text-3xl sm:text-4xl">Endpoint API</h2>
-      <p class="mt-2 text-muted max-w-xl">Backend menyediakan dua endpoint JSON. Setiap request dicatat oleh middleware logger.</p>
+      <p class="mt-2 text-muted max-w-xl">Endpoint REST API untuk CRUD produk. Setiap request dicatat oleh middleware logger.</p>
 
       <div class="mt-10 border-t border-line">
-        <a href="/api/status" class="group flex items-center justify-between gap-4 py-5 border-b border-line transition-colors hover:text-soga">
+        <a href="/api/status" class="group flex items-center justify-between gap-4 py-4 border-b border-line transition-colors hover:text-soga">
           <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-6">
-            <code class="font-mono text-sm font-medium">GET /api/status</code>
-            <span class="text-sm text-muted">Status server, uptime, dan waktu server</span>
+            <code class="font-mono text-sm font-medium"><span class="inline-block w-16 text-soga">GET</span>/api/status</code>
+            <span class="text-sm text-muted">Status server, database, dan uptime</span>
           </div>
           <span class="text-lg transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true">→</span>
         </a>
-        <a href="/api/produk" class="group flex items-center justify-between gap-4 py-5 border-b border-line transition-colors hover:text-soga">
+        <a href="/api/produk" class="group flex items-center justify-between gap-4 py-4 border-b border-line transition-colors hover:text-soga">
           <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-6">
-            <code class="font-mono text-sm font-medium">GET /api/produk</code>
-            <span class="text-sm text-muted">Daftar produk dalam array JSON</span>
+            <code class="font-mono text-sm font-medium"><span class="inline-block w-16 text-soga">GET</span>/api/produk</code>
+            <span class="text-sm text-muted">Seluruh produk dari database</span>
           </div>
           <span class="text-lg transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true">→</span>
         </a>
+        <a href="/api/produk/1" class="group flex items-center justify-between gap-4 py-4 border-b border-line transition-colors hover:text-soga">
+          <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-6">
+            <code class="font-mono text-sm font-medium"><span class="inline-block w-16 text-soga">GET</span>/api/produk/:id</code>
+            <span class="text-sm text-muted">Detail satu produk</span>
+          </div>
+          <span class="text-lg transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true">→</span>
+        </a>
+        <div class="flex items-center justify-between gap-4 py-4 border-b border-line">
+          <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-6">
+            <code class="font-mono text-sm font-medium"><span class="inline-block w-16 text-soga">POST</span>/api/produk</code>
+            <span class="text-sm text-muted">Menambahkan produk baru</span>
+          </div>
+          <span class="hidden sm:inline text-xs text-muted">uji lewat Postman</span>
+        </div>
+        <div class="flex items-center justify-between gap-4 py-4 border-b border-line">
+          <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-6">
+            <code class="font-mono text-sm font-medium"><span class="inline-block w-16 text-soga">PUT</span>/api/produk/:id</code>
+            <span class="text-sm text-muted">Memperbarui produk berdasarkan ID</span>
+          </div>
+          <span class="hidden sm:inline text-xs text-muted">uji lewat Postman</span>
+        </div>
+        <div class="flex items-center justify-between gap-4 py-4 border-b border-line">
+          <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-6">
+            <code class="font-mono text-sm font-medium"><span class="inline-block w-16 text-soga">DELETE</span>/api/produk/:id</code>
+            <span class="text-sm text-muted">Menghapus produk berdasarkan ID</span>
+          </div>
+          <span class="hidden sm:inline text-xs text-muted">uji lewat Postman</span>
+        </div>
       </div>
 
       <p class="mt-6 text-sm text-muted">

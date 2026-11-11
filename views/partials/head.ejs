@@ -69,6 +69,13 @@
       background-position: -12px 0, -12px 0, 0 0, 0 0;
     }
 
+    /* Form & dialog */
+    dialog::backdrop { background: rgba(26, 34, 51, .45); }
+    .lbl { display: block; font-size: .8125rem; font-weight: 500; margin-bottom: .375rem; }
+    .input { width: 100%; border: 1px solid #DDD6CA; background: #fff; border-radius: .5rem; padding: .625rem .875rem; font-size: .875rem; transition: border-color .2s; }
+    .input:hover { border-color: #A9A294; }
+    .input:focus { outline: none; border-color: #1A2233; }
+
     /* Animasi ringan */
     @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
     .rise { animation: rise .6s ease both; }
