@@ -22,6 +22,27 @@ const upload = multer({
       : cb(Object.assign(new Error('Format gambar harus JPG, PNG, atau WebP'), { status: 400 })),
 }).single('gambar');
 
+const folderBukti = path.join(__dirname, '../public/images/bukti');
+fs.mkdirSync(folderBukti, { recursive: true });
+
+const storageBukti = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, folderBukti),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, `bukti-${Date.now()}-${Math.round(Math.random() * 1e6)}${ext}`);
+  }
+});
+
+const unggahBukti = multer({
+  storage: storageBukti,
+  limits: { fileSize: 3 * 1024 * 1024 }, // Maks 3MB
+  fileFilter: (req, file, cb) => {
+    const valid = /jpeg|jpg|png|webp/.test(path.extname(file.originalname).toLowerCase());
+    if (valid) return cb(null, true);
+    cb(new Error('Format bukti transfer harus berupa JPG, PNG, atau WEBP.'));
+  }
+}).single('bukti_transfer');
+
 // Membungkus multer agar error-nya menjadi JSON yang rapi
 function unggahGambar(req, res, next) {
   upload(req, res, (err) => {
@@ -32,4 +53,4 @@ function unggahGambar(req, res, next) {
   });
 }
 
-module.exports = { unggahGambar };
+module.exports = { unggahGambar, unggahBukti };
