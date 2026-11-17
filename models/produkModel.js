@@ -13,6 +13,7 @@ const Produk = sequelize.define(
     stok: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
     kategori: { type: DataTypes.STRING(20), allowNull: false },
     motif: { type: DataTypes.STRING(20), allowNull: false },
+    gambar: { type: DataTypes.STRING(255), allowNull: true },
   },
   { tableName: 'produk' }
 );
