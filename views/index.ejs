@@ -38,7 +38,12 @@
       </div>
 
       <% if (!produk.length) { %>
-        <p class="mt-10 py-12 text-muted">Belum ada produk. <a href="/kelola" class="text-soga font-medium navlink">Tambah produk pertama</a>.</p>
+        <p class="mt-10 py-12 text-muted">
+          Belum ada produk tersedia saat ini.
+          <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+            <a href="/kelola" class="text-soga font-medium navlink">Tambah produk pertama</a>.
+          <% } %>
+        </p>
       <% } %>
 
       <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -57,11 +62,32 @@
               <p class="text-xs font-medium uppercase tracking-wider text-muted"><%= p.kategori %> · <%= p.motif %></p>
               <h3 class="mt-2 font-display font-semibold text-lg leading-snug"><%= p.nama %></h3>
               <p class="mt-2 text-sm text-muted leading-relaxed"><%= p.deskripsi %></p>
-              <div class="mt-auto pt-5 flex items-end justify-between gap-3">
-                <p class="font-semibold"><%= formatRupiah(p.harga) %></p>
-                <p class="text-xs <%= p.stok <= 10 ? 'text-soga font-medium' : 'text-muted' %>">
-                  <%= p.stok <= 10 ? 'Stok terbatas · ' + p.stok : 'Stok ' + p.stok %>
-                </p>
+
+              <div class="mt-auto pt-5">
+                <div class="flex items-end justify-between gap-3">
+                  <p class="font-semibold"><%= formatRupiah(p.harga) %></p>
+                  <p id="stok-label-<%= p.id %>" class="text-xs <%= p.stok <= 10 ? 'text-soga font-medium' : 'text-muted' %>">
+                    <% if (p.stok <= 0) { %>
+                      Stok habis
+                    <% } else if (p.stok <= 10) { %>
+                      Stok terbatas · <%= p.stok %>
+                    <% } else { %>
+                      Stok <%= p.stok %>
+                    <% } %>
+                  </p>
+                </div>
+
+                <button type="button"
+                        id="btn-add-<%= p.id %>"
+                        data-id="<%= p.id %>"
+                        data-nama="<%= p.nama %>"
+                        data-harga="<%= p.harga %>"
+                        data-stok="<%= p.stok %>"
+                        <%= p.stok <= 0 ? 'disabled' : '' %>
+                        onclick="tambahDariTombol(this)"
+                        class="mt-3.5 w-full py-2 px-3 rounded-lg border border-ink text-xs font-medium text-ink hover:bg-ink hover:text-paper disabled:opacity-40 disabled:pointer-events-none transition-colors duration-200">
+                  <%= p.stok > 0 ? '+ Keranjang' : 'Habis' %>
+                </button>
               </div>
             </div>
           </article>
@@ -71,5 +97,6 @@
   </section>
 </main>
 
+<%- include('partials/cart-drawer') %>
 <%- include('partials/footer') %>
 <%- include('partials/scripts') %>
