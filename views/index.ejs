@@ -5,34 +5,16 @@
 
   <!-- Hero -->
   <section class="max-w-6xl mx-auto px-5 sm:px-8 pt-14 pb-16 sm:pt-20 sm:pb-24">
-    <div class="grid lg:grid-cols-12 gap-12 lg:gap-10 items-center">
-      <div class="lg:col-span-7">
-        <p class="rise text-sm font-medium text-soga mb-5">Batik &amp; tenun Nusantara</p>
-        <h1 class="rise rise-2 font-display font-semibold tracking-tight leading-[1.02] text-[2.75rem] sm:text-6xl lg:text-[4.5rem]">
-          Kain karya pengrajin, langsung ke tanganmu.
-        </h1>
-        <p class="rise rise-3 mt-6 max-w-xl text-lg text-muted leading-relaxed">
-          Batik tulis, batik cap, dan tenun pilihan dari para pengrajin. Stok tercatat rapi, jadi yang kamu lihat adalah yang benar-benar tersedia.
-        </p>
-        <div class="rise rise-3 mt-9 flex flex-wrap items-center gap-x-6 gap-y-4">
-          <a href="#produk" class="inline-flex items-center gap-2 bg-ink text-paper font-medium text-sm px-6 py-3.5 rounded-lg transition-colors duration-200 hover:bg-soga">
-            Lihat produk
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
-          </a>
-        </div>
-      </div>
-
-      <!-- Motif pilihan -->
-      <div class="lg:col-span-5 rise rise-3">
-        <div class="grid grid-cols-2 gap-3 pb-6">
-          <% [['parang','batik','Parang'],['kawung','batik','Kawung'],['lurik','tenun','Lurik'],['ikat','tenun','Ikat']].forEach(function (m) { %>
-            <div class="group relative aspect-square overflow-hidden rounded-xl border border-line even:translate-y-6">
-              <div class="motif motif-<%= m[0] %> kat-<%= m[1] %> w-full h-full transition-transform duration-500 group-hover:scale-105"></div>
-              <span class="absolute left-3 bottom-3 bg-paper text-ink text-xs font-medium px-2.5 py-1 rounded-full"><%= m[2] %></span>
-            </div>
-          <% }) %>
-        </div>
-        <p class="mt-2 text-sm text-muted"><%= produk.length %> produk · motif klasik Nusantara</p>
+    <div class="max-w-3xl">
+      <p class="rise text-sm font-medium text-soga mb-5">Batik &amp; tenun Nusantara</p>
+      <h1 class="rise rise-2 font-display font-semibold tracking-tight leading-[1.02] text-[2.75rem] sm:text-6xl lg:text-[4.5rem]">
+        Kain karya pengrajin, langsung ke tanganmu.
+      </h1>
+      <div class="rise rise-3 mt-9 flex flex-wrap items-center gap-x-6 gap-y-4">
+        <a href="#produk" class="inline-flex items-center gap-2 bg-ink text-paper font-medium text-sm px-6 py-3.5 rounded-lg transition-colors duration-200 hover:bg-soga">
+          Lihat produk
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
+        </a>
       </div>
     </div>
   </section>
@@ -42,10 +24,7 @@
     <div class="max-w-6xl mx-auto px-5 sm:px-8 py-16 sm:py-20">
       <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
         <div>
-          <h2 class="font-display font-semibold tracking-tight text-3xl sm:text-4xl">Koleksi minggu ini</h2>
-          <p class="mt-2 text-muted">
-            Data diambil dari database · <span id="jumlah"><%= produk.length %> produk</span>
-          </p>
+          <h2 class="font-display font-semibold tracking-tight text-3xl sm:text-4xl">Produk</h2>
         </div>
 
         <div class="flex flex-wrap gap-2" role="group" aria-label="Filter kategori">

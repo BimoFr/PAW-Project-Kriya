@@ -1,0 +1,31 @@
+<%- include('partials/head', { title }) %>
+
+<main class="min-h-screen flex items-center justify-center px-5">
+  <div class="w-full max-w-sm bg-white border border-line rounded-xl p-8">
+    <p class="text-xs font-medium uppercase tracking-wider text-soga">Akses Terbatas</p>
+    <h1 class="mt-1 font-display font-semibold text-2xl">Masuk Pengelola</h1>
+
+    <% if (error) { %>
+      <p class="mt-4 text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3.5 py-2.5">
+        <%= error %>
+      </p>
+    <% } %>
+
+    <form action="/masuk" method="POST" class="mt-6 space-y-4">
+      <div>
+        <label class="block text-xs font-medium uppercase tracking-wider text-muted mb-1.5">Username</label>
+        <input type="text" name="username" required autocomplete="off"
+               class="w-full px-3.5 py-2.5 text-sm bg-paper/40 border border-line rounded-lg focus:outline-none focus:border-ink">
+      </div>
+      <div>
+        <label class="block text-xs font-medium uppercase tracking-wider text-muted mb-1.5">Password</label>
+        <input type="password" name="password" required
+               class="w-full px-3.5 py-2.5 text-sm bg-paper/40 border border-line rounded-lg focus:outline-none focus:border-ink">
+      </div>
+      <button type="submit"
+              class="w-full bg-ink text-paper text-sm font-medium py-3 rounded-lg hover:bg-soga transition-colors">
+        Masuk ke Kelola
+      </button>
+    </form>
+  </div>
+</main>

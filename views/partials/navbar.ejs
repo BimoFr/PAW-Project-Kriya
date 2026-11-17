@@ -7,7 +7,13 @@
 
     <div class="hidden md:flex items-center gap-8 text-sm font-medium">
       <a href="/#produk" class="navlink">Produk</a>
-      <a href="/kelola" class="navlink">Kelola</a>
+
+      <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+        <a href="/kelola" class="navlink text-soga">Kelola</a>
+        <form action="/keluar" method="POST" class="inline">
+          <button type="submit" class="navlink text-muted hover:text-ink">Keluar</button>
+        </form>
+      <% } %>
     </div>
 
     <button id="menu-btn" type="button" class="md:hidden -mr-2 p-2 rounded-lg hover:bg-ink/5 transition-colors"
@@ -19,10 +25,16 @@
 
   <div id="menu-mobile" class="hidden md:hidden border-t border-line bg-paper">
     <div class="max-w-6xl mx-auto px-5 sm:px-8 py-3 flex flex-col text-sm font-medium">
-      <a href="/#produk" class="py-3 border-b border-line">Produk</a>
-      <a href="/kelola" class="py-3 border-b border-line">Kelola</a>
-      <a href="/api/produk" class="py-3 border-b border-line">API produk</a>
-      <a href="/api/status" class="py-3">API status</a>
+      <a href="/#produk" class="py-3 <%= (typeof isAdmin !== 'undefined' && isAdmin) ? 'border-b border-line' : '' %>">Produk</a>
+
+      <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+        <a href="/kelola" class="py-3 border-b border-line text-soga">Kelola</a>
+        <a href="/api/produk" class="py-3 border-b border-line">API produk</a>
+        <a href="/api/status" class="py-3 border-b border-line">API status</a>
+        <form action="/keluar" method="POST">
+          <button type="submit" class="w-full text-left py-3 text-muted hover:text-ink">Keluar</button>
+        </form>
+      <% } %>
     </div>
   </div>
 </header>
