@@ -20,7 +20,7 @@ module.exports = (sequelize) => {
       allowNull: false
     },
     daftar_item: {
-      type: DataTypes.TEXT, // Menyimpan JSON array item yang dibeli
+      type: DataTypes.TEXT,
       allowNull: false
     },
     total_harga: {
@@ -34,7 +34,7 @@ module.exports = (sequelize) => {
     status: {
       type: DataTypes.STRING(30),
       allowNull: false,
-      defaultValue: 'Menunggu Verifikasi' // Menunggu Verifikasi | Diproses | Dikirim
+      defaultValue: 'Menunggu Verifikasi'
     }
   }, {
     tableName: 'pesanan',
