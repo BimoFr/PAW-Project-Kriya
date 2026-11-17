@@ -43,6 +43,14 @@ function validasiProduk(body = {}, { parsial = false } = {}) {
     errors.push('tidak ada field yang dikirim untuk diperbarui');
   }
 
+    if (body.gambar !== undefined) {
+    const g = String(body.gambar ?? '').trim();
+    if (g === '') data.gambar = null;
+    else if (!/^[\w-]+\.(jpe?g|png|webp)$/i.test(g)) {
+      errors.push('gambar harus berupa nama file (jpg, jpeg, png, atau webp), contoh: batik-parang.jpg');
+    } else data.gambar = g;
+  }
+
   return { errors, data };
 }
 
