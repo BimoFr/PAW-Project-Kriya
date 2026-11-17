@@ -5,22 +5,32 @@
       <%= appName %>
     </a>
 
-    <div class="hidden md:flex items-center gap-8 text-sm font-medium">
-      <a href="/#produk" class="navlink">Produk</a>
+    <div class="flex items-center gap-4 sm:gap-7">
+      <div class="hidden md:flex items-center gap-7 text-sm font-medium">
+        <a href="/#produk" class="navlink">Produk</a>
 
-      <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
-        <a href="/kelola" class="navlink text-soga">Kelola</a>
-        <form action="/keluar" method="POST" class="inline">
-          <button type="submit" class="navlink text-muted hover:text-ink">Keluar</button>
-        </form>
-      <% } %>
+        <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+          <a href="/kelola" class="navlink text-soga">Kelola</a>
+          <form action="/keluar" method="POST" class="inline">
+            <button type="submit" class="navlink text-muted hover:text-ink">Keluar</button>
+          </form>
+        <% } %>
+      </div>
+
+      <button type="button" onclick="bukaKeranjang()" aria-label="Buka keranjang belanja"
+              class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-line bg-white/70 hover:border-ink transition-colors">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+        <span id="cart-badge" class="tabular-nums text-xs font-medium bg-ink text-paper px-1.5 py-0.5 rounded">0</span>
+      </button>
+
+      <button id="menu-btn" type="button" class="md:hidden -mr-2 p-2 rounded-lg hover:bg-ink/5 transition-colors"
+              aria-expanded="false" aria-controls="menu-mobile" aria-label="Buka menu">
+        <svg id="ico-open" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        <svg id="ico-close" class="hidden" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
     </div>
-
-    <button id="menu-btn" type="button" class="md:hidden -mr-2 p-2 rounded-lg hover:bg-ink/5 transition-colors"
-            aria-expanded="false" aria-controls="menu-mobile" aria-label="Buka menu">
-      <svg id="ico-open" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
-      <svg id="ico-close" class="hidden" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
-    </button>
   </nav>
 
   <div id="menu-mobile" class="hidden md:hidden border-t border-line bg-paper">
