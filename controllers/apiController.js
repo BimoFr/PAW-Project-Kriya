@@ -20,6 +20,10 @@ function hapusFileGagal(file) {
   }
 }
 
+function jeda(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 // GET /api/status
 const status = asyncHandler(async (req, res) => {
   let database = 'terhubung';
@@ -138,7 +142,6 @@ const checkout = async (req, res) => {
         return res.status(400).json({ error: 'Jumlah pembelian tidak valid.' });
       }
 
-      // Kunci baris produk di MySQL selama transaksi berlangsung
       const produk = await Produk.findByPk(item.id, {
         transaction: t,
         lock: t.LOCK.UPDATE
@@ -158,7 +161,6 @@ const checkout = async (req, res) => {
         });
       }
 
-      // Kurangi stok otomatis
       await produk.update({ stok: produk.stok - qty }, { transaction: t });
 
       const subtotal = produk.harga * qty;
@@ -228,6 +230,131 @@ const ubahStatusPesanan = async (req, res) => {
   }
 };
 
+// POST /api/chat (Publik - Chatbot Asisten Belanja AI via OpenRouter)
+const chatAsisten = async (req, res) => {
+  const waNomor = String(config.adminWhatsapp || '').trim();
+  const waUrl = `https://wa.me/${waNomor}?text=${encodeURIComponent('Halo Kriya, saya ingin bertanya seputar kain batik/tenun.')}`;
+
+  try {
+    const pesan = String(req.body.pesan || '').trim();
+    const riwayat = Array.isArray(req.body.riwayat) ? req.body.riwayat.slice(-6) : [];
+    const apiKey = String(config.openrouterApiKey || '').trim();
+    const daftarModel = String(config.openrouterModel || '')
+      .split(',')
+      .map((m) => m.trim())
+      .filter(Boolean);
+
+    if (!pesan) {
+      return res.status(400).json({ error: 'Pesan tidak boleh kosong.' });
+    }
+    if (pesan.length > 350) {
+      return res.status(400).json({ error: 'Pesan maksimal 350 karakter.' });
+    }
+
+    if (!apiKey || daftarModel.length === 0) {
+      console.error('Konfigurasi OpenRouter belum lengkap di .env (OPENROUTER_API_KEY / OPENROUTER_MODEL kosong).');
+      return res.status(503).json({
+        error: 'Asisten AI sedang tidak aktif. Silakan hubungi pengrajin langsung melalui WhatsApp.',
+        whatsappUrl: waUrl
+      });
+    }
+
+    // Ambil katalog terbaru langsung dari MySQL (Database-Context Injection)
+    const semuaProduk = await produkModel.getAll();
+    const daftarKatalogTeks = semuaProduk.length
+      ? semuaProduk.map((p) =>
+          `- ${p.nama} (${p.kategori}) | Harga: Rp ${Number(p.harga).toLocaleString('id-ID')} | Stok: ${p.stok > 0 ? p.stok + ' tersedia' : 'HABIS'} | Keterangan: ${p.deskripsi || '-'}`
+        ).join('\n')
+      : 'Belum ada produk yang terdaftar di katalog.';
+
+    const instruksiSistem = [
+      `Kamu adalah Asisten Belanja resmi untuk "${config.appName}", toko daring kain batik dan tenun karya pengrajin Nusantara.`,
+      'Jawab dalam bahasa Indonesia yang ramah, ringkas, sopan, dan langsung ke inti pertanyaan (maksimal 3-4 kalimat atau poin singkat).',
+      'Gunakan HANYA data katalog di bawah ini untuk menjawab ketersediaan stok, harga, dan spesifikasi produk. Jangan pernah mengarang produk atau stok yang tidak ada di daftar.',
+      'Jika pembeli bertanya tentang cara pemesanan: jelaskan bahwa pembeli cukup klik tombol "+ Keranjang" pada produk, buka ikon keranjang di kanan atas, transfer ke BCA 1234567890 a.n. Kriya Nusantara, lalu unggah bukti transfer tanpa perlu membuat akun.',
+      'Jika pembeli meminta pesanan custom (motif/ukuran khusus), pembelian grosir/partai besar, atau menanyakan hal di luar katalog Kriya, sarankan untuk menekan tombol "Hubungi WhatsApp" di bawah chat agar terhubung langsung dengan pengrajin.',
+      '',
+      '=== KATALOG PRODUK KRIYA SAAT INI ===',
+      daftarKatalogTeks
+    ].join('\n');
+
+    const messages = [
+      { role: 'system', content: instruksiSistem },
+      ...riwayat
+        .filter((item) => item && (item.role === 'user' || item.role === 'model' || item.role === 'assistant') && typeof item.text === 'string')
+        .map((item) => ({
+          role: item.role === 'model' ? 'assistant' : item.role,
+          content: item.text.slice(0, 500)
+        })),
+      { role: 'user', content: pesan }
+    ];
+
+    const antreanModel = daftarModel.length === 1 ? [daftarModel[0], daftarModel[0]] : daftarModel;
+
+    for (let i = 0; i < antreanModel.length; i++) {
+      const modelAktif = antreanModel[i];
+
+      try {
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': `http://localhost:${config.port}`,
+            'X-Title': config.appName
+          },
+          signal: AbortSignal.timeout(20000),
+          body: JSON.stringify({
+            model: modelAktif,
+            messages,
+            temperature: 0.35,
+            max_tokens: 600
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          const balasan = data?.choices?.[0]?.message?.content?.trim();
+          if (balasan) {
+            return res.json({
+              status: 'success',
+              balasan,
+              whatsappUrl: waUrl
+            });
+          }
+        }
+
+        console.error(`OpenRouter API error (${modelAktif}, percobaan ${i + 1}):`, response.status, JSON.stringify(data));
+
+        if ((response.status === 429 || response.status === 503 || response.status === 502) && i < antreanModel.length - 1) {
+          await jeda(1200);
+          continue;
+        }
+
+        break;
+      } catch (fetchErr) {
+        console.error(`OpenRouter fetch gagal (${modelAktif}):`, fetchErr.message);
+        if (i < antreanModel.length - 1) {
+          await jeda(1200);
+          continue;
+        }
+      }
+    }
+
+    return res.status(502).json({
+      error: 'Asisten AI sedang sibuk. Kamu bisa langsung bertanya ke pengrajin melalui WhatsApp.',
+      whatsappUrl: waUrl
+    });
+  } catch (err) {
+    console.error('Error chatAsisten:', err.name, err.message, err.cause || '');
+    return res.status(500).json({
+      error: 'Koneksi ke asisten AI terputus. Silakan hubungi pengrajin via WhatsApp.',
+      whatsappUrl: waUrl
+    });
+  }
+};
+
 function unggahGambar(req, res) {
   if (!req.file) return res.status(400).json({ error: 'Pilih file gambar terlebih dahulu' });
   res.status(201).json({ gambar: req.file.filename });
@@ -242,5 +369,6 @@ module.exports = {
   hapusProduk,
   unggahGambar,
   checkout,
-  ubahStatusPesanan
+  ubahStatusPesanan,
+  chatAsisten
 };
