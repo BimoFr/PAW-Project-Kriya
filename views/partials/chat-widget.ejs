@@ -1,0 +1,70 @@
+<!-- Tombol Pemicu Chatbot Mengambang -->
+<button type="button" id="chat-toggle-btn" onclick="toggleChatWidget()" aria-expanded="false" aria-controls="chat-panel"
+        class="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-ink text-paper text-sm font-medium shadow-md hover:bg-soga transition-colors">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+  </svg>
+  <span>Tanya Kriya</span>
+</button>
+
+<!-- Panel Chatbot Asisten Belanja -->
+<section id="chat-panel" aria-label="Asisten Belanja Kriya"
+         class="hidden fixed bottom-20 right-5 z-40 w-[calc(100vw-2.5rem)] max-w-sm bg-paper border border-line rounded-2xl shadow-xl flex flex-col overflow-hidden">
+  <!-- Header -->
+  <div class="px-4 py-3.5 bg-white border-b border-line flex items-center justify-between">
+    <div>
+      <p class="text-[11px] font-medium uppercase tracking-wider text-soga">Asisten Katalog</p>
+      <h2 class="font-display font-semibold text-base text-ink">Tanya Seputar Kain</h2>
+    </div>
+    <button type="button" onclick="toggleChatWidget()" aria-label="Tutup asisten chat"
+            class="p-1.5 rounded-lg text-muted hover:text-ink hover:bg-paper transition-colors">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <path d="M6 6l12 12M18 6L6 18"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Riwayat Pesan -->
+  <div id="chat-messages" class="h-72 overflow-y-auto px-4 py-3.5 space-y-3 text-xs leading-relaxed">
+    <div class="bg-white border border-line rounded-xl rounded-tl-sm p-3 text-ink">
+      Halo! Saya asisten katalog <strong><%= appName %></strong>. Tanyakan ketersediaan stok, rekomendasi batik untuk acara tertentu, atau cara pemesanan.
+    </div>
+
+    <!-- Pertanyaan Cepat -->
+    <div id="chat-quick-prompts" class="flex flex-wrap gap-1.5 pt-1">
+      <button type="button" onclick="kirimPertanyaanCepat('Batik apa yang cocok untuk acara formal?')"
+              class="text-[11px] px-2.5 py-1.5 rounded-lg border border-line bg-white/80 hover:border-ink transition-colors text-left">
+        Batik acara formal?
+      </button>
+      <button type="button" onclick="kirimPertanyaanCepat('Produk mana saja yang stoknya masih tersedia?')"
+              class="text-[11px] px-2.5 py-1.5 rounded-lg border border-line bg-white/80 hover:border-ink transition-colors text-left">
+        Cek stok tersedia
+      </button>
+      <button type="button" onclick="kirimPertanyaanCepat('Bagaimana cara memesan di Kriya?')"
+              class="text-[11px] px-2.5 py-1.5 rounded-lg border border-line bg-white/80 hover:border-ink transition-colors text-left">
+        Cara pesan
+      </button>
+    </div>
+  </div>
+
+  <!-- Eskalasi WhatsApp Pengrajin -->
+  <div class="px-4 py-2 bg-white/70 border-t border-line flex items-center justify-between text-[11px]">
+    <span class="text-muted">Pesanan custom atau grosir?</span>
+    <a id="chat-wa-link" href="https://wa.me/6281234567890?text=Halo%20Kriya%2C%20saya%20ingin%20bertanya%20seputar%20kain."
+       target="_blank" rel="noopener noreferrer"
+       class="font-medium text-soga hover:underline">
+      Hubungi WhatsApp &rarr;
+    </a>
+  </div>
+
+  <!-- Form Input Pesan -->
+  <form id="chat-form" class="p-3 bg-white border-t border-line flex items-center gap-2">
+    <input type="text" id="chat-input" maxlength="350" autocomplete="off" required
+           placeholder="Tulis pertanyaanmu..."
+           class="flex-1 px-3 py-2 text-xs bg-paper/60 border border-line rounded-lg focus:outline-none focus:border-ink">
+    <button type="submit" id="chat-send-btn"
+            class="px-3.5 py-2 rounded-lg bg-ink text-paper text-xs font-medium hover:bg-soga transition-colors shrink-0">
+      Kirim
+    </button>
+  </form>
+</section>
