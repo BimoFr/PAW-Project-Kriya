@@ -65,4 +65,9 @@ const hapusProduk = asyncHandler(async (req, res) => {
   res.json({ pesan: 'Produk berhasil dihapus', id });
 });
 
-module.exports = { status, daftarProduk, detailProduk, tambahProduk, ubahProduk, hapusProduk };
+function unggahGambar(req, res) {
+  if (!req.file) return res.status(400).json({ error: 'Pilih file gambar terlebih dahulu' });
+  res.status(201).json({ gambar: req.file.filename });
+}
+
+module.exports = { status, daftarProduk, detailProduk, tambahProduk, ubahProduk, hapusProduk, unggahGambar };
