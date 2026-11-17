@@ -27,6 +27,7 @@
         <label for="f-nama" class="lbl">Nama produk</label>
         <input id="f-nama" name="nama" type="text" maxlength="120" required class="input" placeholder="Contoh: Batik Tulis Parang 2 m">
       </div>
+
       <div class="grid sm:grid-cols-2 gap-4">
         <div>
           <label for="f-kategori" class="lbl">Kategori</label>
@@ -49,9 +50,24 @@
           <input id="f-stok" name="stok" type="number" min="0" step="1" required class="input" placeholder="10">
         </div>
       </div>
+
       <div>
         <label for="f-deskripsi" class="lbl">Deskripsi</label>
         <textarea id="f-deskripsi" name="deskripsi" rows="3" maxlength="500" class="input" placeholder="Bahan, teknik, dan kegunaan"></textarea>
+      </div>
+
+      <div>
+        <label for="f-berkas" class="lbl">Gambar produk <span class="text-muted font-normal">(opsional)</span></label>
+        <input type="hidden" id="f-gambar" name="gambar">
+        <div class="flex items-center gap-4">
+          <div id="pratinjau" class="w-20 h-20 rounded-lg border border-line bg-white overflow-hidden shrink-0 grid place-items-center text-xs text-muted">Belum ada</div>
+          <div class="min-w-0">
+            <input id="f-berkas" name="berkas" type="file" accept="image/jpeg,image/png,image/webp" class="peer sr-only">
+            <label for="f-berkas" class="inline-block cursor-pointer px-4 py-2 rounded-lg border border-line text-sm font-medium transition-colors hover:border-ink peer-focus-visible:border-ink">Pilih gambar</label>
+            <button type="button" id="btn-hapus-gambar" class="hidden ml-3 text-sm text-soga navlink">Hapus gambar</button>
+            <p class="mt-1.5 text-xs text-muted">JPG, PNG, atau WebP. Maksimal 2 MB.</p>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -79,8 +95,5 @@
 <div id="toast" role="status" aria-live="polite" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 hidden bg-ink text-paper text-sm px-5 py-3 rounded-lg"></div>
 
 <%- include('partials/footer') %>
-<script>
-  window.KRIYA = { kategori: <%- JSON.stringify(kategori) %> };
-</script>
 <%- include('partials/scripts-kelola') %>
 <%- include('partials/scripts') %>

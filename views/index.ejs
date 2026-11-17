@@ -19,12 +19,11 @@
             Lihat produk
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
           </a>
-          <a href="#api" class="navlink text-sm font-medium">Lihat endpoint API</a>
+          <a href="/kelola" class="navlink text-sm font-medium">Kelola produk</a>
         </div>
       </div>
 
-      <!-- Kartu status (data hidup dari /api/status) -->
-       <!-- Motif pilihan -->
+      <!-- Motif pilihan -->
       <div class="lg:col-span-5 rise rise-3">
         <div class="grid grid-cols-2 gap-3 pb-6">
           <% [['parang','batik','Parang'],['kawung','batik','Kawung'],['lurik','tenun','Lurik'],['ikat','tenun','Ikat']].forEach(function (m) { %>
@@ -36,6 +35,7 @@
         </div>
         <p class="mt-2 text-sm text-muted"><%= produk.length %> produk · motif klasik Nusantara</p>
       </div>
+    </div>
   </section>
 
   <!-- Produk -->
@@ -62,12 +62,18 @@
       <% if (!produk.length) { %>
         <p class="mt-10 py-12 text-muted">Belum ada produk. <a href="/kelola" class="text-soga font-medium navlink">Tambah produk pertama</a>.</p>
       <% } %>
+
       <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <% produk.forEach(function (p) { %>
           <article data-kategori="<%= p.kategori.toLowerCase() %>"
                    class="group flex flex-col bg-white border border-line rounded-xl overflow-hidden transition duration-300 hover:-translate-y-0.5 hover:border-ink/40">
-            <div class="overflow-hidden aspect-[4/3]" aria-hidden="true">
-              <div class="motif motif-<%= p.motif %> kat-<%= p.kategori.toLowerCase() %> w-full h-full transition-transform duration-500 group-hover:scale-105"></div>
+            <div class="overflow-hidden aspect-[4/3] bg-white">
+              <% if (p.gambar) { %>
+                <img src="/images/produk/<%= p.gambar %>" alt="<%= p.nama %>" loading="lazy"
+                     class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+              <% } else { %>
+                <div class="motif motif-<%= p.motif %> kat-<%= p.kategori.toLowerCase() %> w-full h-full transition-transform duration-500 group-hover:scale-105" aria-hidden="true"></div>
+              <% } %>
             </div>
             <div class="flex flex-col flex-1 p-5">
               <p class="text-xs font-medium uppercase tracking-wider text-muted"><%= p.kategori %> · <%= p.motif %></p>
@@ -83,63 +89,6 @@
           </article>
         <% }) %>
       </div>
-    </div>
-  </section>
-
-  <!-- API -->
-  <section id="api" class="border-t border-line scroll-mt-16">
-    <div class="max-w-6xl mx-auto px-5 sm:px-8 py-16 sm:py-20">
-      <h2 class="font-display font-semibold tracking-tight text-3xl sm:text-4xl">Endpoint API</h2>
-      <p class="mt-2 text-muted max-w-xl">Endpoint REST API untuk CRUD produk. Setiap request dicatat oleh middleware logger.</p>
-
-      <div class="mt-10 border-t border-line">
-        <a href="/api/status" class="group flex items-center justify-between gap-4 py-4 border-b border-line transition-colors hover:text-soga">
-          <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-6">
-            <code class="font-mono text-sm font-medium"><span class="inline-block w-16 text-soga">GET</span>/api/status</code>
-            <span class="text-sm text-muted">Status server, database, dan uptime</span>
-          </div>
-          <span class="text-lg transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true">→</span>
-        </a>
-        <a href="/api/produk" class="group flex items-center justify-between gap-4 py-4 border-b border-line transition-colors hover:text-soga">
-          <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-6">
-            <code class="font-mono text-sm font-medium"><span class="inline-block w-16 text-soga">GET</span>/api/produk</code>
-            <span class="text-sm text-muted">Seluruh produk dari database</span>
-          </div>
-          <span class="text-lg transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true">→</span>
-        </a>
-        <a href="/api/produk/1" class="group flex items-center justify-between gap-4 py-4 border-b border-line transition-colors hover:text-soga">
-          <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-6">
-            <code class="font-mono text-sm font-medium"><span class="inline-block w-16 text-soga">GET</span>/api/produk/:id</code>
-            <span class="text-sm text-muted">Detail satu produk</span>
-          </div>
-          <span class="text-lg transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true">→</span>
-        </a>
-        <div class="flex items-center justify-between gap-4 py-4 border-b border-line">
-          <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-6">
-            <code class="font-mono text-sm font-medium"><span class="inline-block w-16 text-soga">POST</span>/api/produk</code>
-            <span class="text-sm text-muted">Menambahkan produk baru</span>
-          </div>
-          <span class="hidden sm:inline text-xs text-muted">uji lewat Postman</span>
-        </div>
-        <div class="flex items-center justify-between gap-4 py-4 border-b border-line">
-          <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-6">
-            <code class="font-mono text-sm font-medium"><span class="inline-block w-16 text-soga">PUT</span>/api/produk/:id</code>
-            <span class="text-sm text-muted">Memperbarui produk berdasarkan ID</span>
-          </div>
-          <span class="hidden sm:inline text-xs text-muted">uji lewat Postman</span>
-        </div>
-        <div class="flex items-center justify-between gap-4 py-4 border-b border-line">
-          <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-6">
-            <code class="font-mono text-sm font-medium"><span class="inline-block w-16 text-soga">DELETE</span>/api/produk/:id</code>
-            <span class="text-sm text-muted">Menghapus produk berdasarkan ID</span>
-          </div>
-          <span class="hidden sm:inline text-xs text-muted">uji lewat Postman</span>
-        </div>
-      </div>
-
-      <p class="mt-6 text-sm text-muted">
-        Log request tersimpan di <code class="font-mono text-[13px] bg-ink/5 px-1.5 py-0.5 rounded">logs/logger.md</code> dan tampil di terminal.
-      </p>
     </div>
   </section>
 </main>

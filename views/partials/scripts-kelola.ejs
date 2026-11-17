@@ -7,6 +7,9 @@
     var form = document.getElementById('form');
     var errBox = document.getElementById('form-error');
     var toast = document.getElementById('toast');
+    var berkas = document.getElementById('f-berkas');
+    var pratinjau = document.getElementById('pratinjau');
+    var btnHapusGambar = document.getElementById('btn-hapus-gambar');
     var data = [], editId = null, hapusId = null, toastTimer;
 
     function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -26,10 +29,18 @@
       clearTimeout(toastTimer); toastTimer = setTimeout(function () { toast.classList.add('hidden'); }, 3000);
     }
 
+    // Memberi tanda ke tab katalog bahwa data produk berubah
+    function tandai() {
+      try { localStorage.setItem('kriya-produk-berubah', String(Date.now())); } catch (e) {}
+    }
+
     function baris(p) {
       var kat = p.kategori.toLowerCase();
+      var thumb = p.gambar
+        ? '<img src="/images/produk/' + encodeURIComponent(p.gambar) + '" alt="" class="w-14 h-14 rounded-lg object-cover shrink-0 border border-line">'
+        : '<div class="motif motif-' + esc(p.motif) + ' kat-' + esc(kat) + ' w-14 h-14 rounded-lg shrink-0" aria-hidden="true"></div>';
       return '<div class="fade flex flex-col sm:flex-row sm:items-center gap-4 py-5 border-b border-line">' +
-        '<div class="motif motif-' + esc(p.motif) + ' kat-' + esc(kat) + ' w-14 h-14 rounded-lg shrink-0" aria-hidden="true"></div>' +
+        thumb +
         '<div class="flex-1 min-w-0"><p class="font-display font-semibold leading-snug">' + esc(p.nama) + '</p>' +
         '<p class="text-sm text-muted">' + esc(p.kategori) + ' · ' + esc(p.motif) + ' · stok ' + esc(p.stok) + '</p></div>' +
         '<p class="font-semibold sm:w-32 sm:text-right">' + rp(p.harga) + '</p>' +
@@ -48,18 +59,51 @@
         .catch(function () { daftar.innerHTML = '<p class="py-12 text-muted">Gagal memuat data dari server.</p>'; });
     }
 
+    function tampilError(daftarError) {
+      errBox.innerHTML = daftarError.map(function (e) { return '<li>' + esc(e) + '</li>'; }).join('');
+      errBox.classList.remove('hidden');
+    }
+
+    // ----- Pemilih gambar -----
+    function setPratinjau(src) {
+      pratinjau.innerHTML = src
+        ? '<img src="' + src + '" alt="Pratinjau gambar" class="w-full h-full object-cover">'
+        : 'Belum ada';
+      btnHapusGambar.classList.toggle('hidden', !src);
+    }
+
+    function unggah(file) {
+      var fd = new FormData();
+      fd.append('gambar', file);
+      return api('/api/upload', { method: 'POST', body: fd }).then(function (r) { return r.gambar; });
+    }
+
+    berkas.addEventListener('change', function () {
+      var file = berkas.files[0];
+      if (!file) return;
+      if (['image/jpeg', 'image/png', 'image/webp'].indexOf(file.type) === -1) {
+        tampilError(['Format gambar harus JPG, PNG, atau WebP']); berkas.value = ''; return;
+      }
+      if (file.size > 2 * 1024 * 1024) {
+        tampilError(['Ukuran gambar maksimal 2 MB']); berkas.value = ''; return;
+      }
+      errBox.classList.add('hidden');
+      setPratinjau(URL.createObjectURL(file));
+    });
+
+    btnHapusGambar.addEventListener('click', function () {
+      berkas.value = ''; form.elements.gambar.value = ''; setPratinjau(null);
+    });
+
+    // ----- Form tambah / ubah -----
     function bukaForm(p) {
       editId = p ? p.id : null;
       document.getElementById('form-judul').textContent = p ? 'Ubah produk' : 'Tambah produk';
       form.reset(); errBox.classList.add('hidden');
-      if (p) ['nama', 'kategori', 'motif', 'harga', 'stok', 'deskripsi'].forEach(function (k) { form.elements[k].value = p[k]; });
+      if (p) ['nama', 'kategori', 'motif', 'harga', 'stok', 'deskripsi', 'gambar'].forEach(function (k) { form.elements[k].value = p[k] == null ? '' : p[k]; });
+      setPratinjau(p && p.gambar ? '/images/produk/' + encodeURIComponent(p.gambar) : null);
       dlgForm.showModal();
       form.elements.nama.focus();
-    }
-
-    function tampilError(daftarError) {
-      errBox.innerHTML = daftarError.map(function (e) { return '<li>' + esc(e) + '</li>'; }).join('');
-      errBox.classList.remove('hidden');
     }
 
     document.getElementById('btn-tambah').addEventListener('click', function () { bukaForm(null); });
@@ -85,16 +129,25 @@
       var f = form.elements;
       var payload = {
         nama: f.nama.value.trim(), kategori: f.kategori.value, motif: f.motif.value,
-        harga: f.harga.value, stok: f.stok.value, deskripsi: f.deskripsi.value.trim()
+        harga: f.harga.value, stok: f.stok.value, deskripsi: f.deskripsi.value.trim(),
+        gambar: f.gambar.value.trim()
       };
       var simpan = document.getElementById('btn-simpan');
       simpan.disabled = true;
-      api(editId ? '/api/produk/' + editId : '/api/produk', {
-        method: editId ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+
+      // Unggah gambar dulu (jika ada file baru), baru simpan data produk
+      var siap = berkas.files[0]
+        ? unggah(berkas.files[0]).then(function (nama) { payload.gambar = nama; })
+        : Promise.resolve();
+
+      siap.then(function () {
+        return api(editId ? '/api/produk/' + editId : '/api/produk', {
+          method: editId ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
       }).then(function () {
-        dlgForm.close(); notif(editId ? 'Produk berhasil diperbarui' : 'Produk berhasil ditambahkan'); return muat();
+        dlgForm.close(); tandai(); notif(editId ? 'Produk berhasil diperbarui' : 'Produk berhasil ditambahkan'); return muat();
       }).catch(function (err) {
         tampilError(err.detail && err.detail.length ? err.detail : [err.message]);
       }).then(function () { simpan.disabled = false; });
@@ -102,7 +155,7 @@
 
     document.getElementById('hapus-ok').addEventListener('click', function () {
       api('/api/produk/' + hapusId, { method: 'DELETE' })
-        .then(function () { dlgHapus.close(); notif('Produk berhasil dihapus'); return muat(); })
+        .then(function () { dlgHapus.close(); tandai(); notif('Produk berhasil dihapus'); return muat(); })
         .catch(function (err) { dlgHapus.close(); notif(err.message); });
     });
 
