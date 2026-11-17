@@ -16,4 +16,7 @@ module.exports = {
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
   },
+  openrouterApiKey: process.env.OPENROUTER_API_KEY || '',
+  openrouterModel: process.env.OPENROUTER_MODEL || '',
+  adminWhatsapp: (process.env.ADMIN_WHATSAPP || '').replace(/[^0-9]/g, ''),
 };
