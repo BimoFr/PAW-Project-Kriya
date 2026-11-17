@@ -8,6 +8,8 @@ const sequelize = new Sequelize(db.name, db.user, db.password, {
   logging: false,
 });
 
+const Pesanan = require('./pesananModels')(sequelize);
+
 // Membuat database (khusus MySQL), cek koneksi, lalu membuat tabel bila belum ada.
 async function initDatabase() {
   if (db.dialect === 'mysql') {
@@ -25,4 +27,4 @@ async function initDatabase() {
   await sequelize.sync({ alter: true });
 }
 
-module.exports = { sequelize, initDatabase };
+module.exports = { sequelize, initDatabase, Pesanan };
