@@ -199,86 +199,192 @@
     totalEl.textContent = formatIdr(totalHarga);
   }
 
+  // ---------- Chatbot Asisten Belanja AI (POST /api/chat) ----------
+  var riwayatChat = [];
+
+  function toggleChatWidget() {
+    var panel = document.getElementById('chat-panel');
+    var btn = document.getElementById('chat-toggle-btn');
+    if (!panel || !btn) return;
+    var terbuka = panel.classList.toggle('hidden') === false;
+    btn.setAttribute('aria-expanded', String(terbuka));
+    if (terbuka) {
+      var input = document.getElementById('chat-input');
+      if (input) input.focus();
+    }
+  }
+
+  function formatTeksBot(teks) {
+    return escHtml(teks)
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n/g, '<br>');
+  }
+
+  function tambahGelembungChat(peran, teks, waFallbackUrl) {
+    var box = document.getElementById('chat-messages');
+    if (!box) return;
+
+    var div = document.createElement('div');
+    if (peran === 'user') {
+      div.className = 'ml-auto max-w-[85%] bg-ink text-paper rounded-xl rounded-tr-sm px-3 py-2';
+      div.innerHTML = escHtml(teks);
+    } else {
+      div.className = 'mr-auto max-w-[90%] bg-white border border-line text-ink rounded-xl rounded-tl-sm p-3 space-y-2';
+      div.innerHTML = '<div>' + formatTeksBot(teks) + '</div>';
+      if (waFallbackUrl) {
+        div.innerHTML += '<a href="' + escHtml(waFallbackUrl) + '" target="_blank" rel="noopener noreferrer" class="inline-block text-[11px] font-medium text-soga underline">Lanjutkan ke WhatsApp Pengrajin &rarr;</a>';
+      }
+    }
+
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function kirimPertanyaanCepat(teks) {
+    var input = document.getElementById('chat-input');
+    var form = document.getElementById('chat-form');
+    if (!input || !form) return;
+    input.value = teks;
+    form.dispatchEvent(new Event('submit', { cancelable: true }));
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     renderKeranjang();
 
+    // Form Checkout
     var form = document.getElementById('checkout-form');
-    if (!form) return;
+    if (form) {
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var errBox = document.getElementById('checkout-error');
+        var btn = document.getElementById('btn-submit-checkout');
+        errBox.classList.add('hidden');
+        btn.disabled = true;
+        btn.textContent = 'Memproses...';
 
-    form.addEventListener('submit', async function (e) {
-      e.preventDefault();
-      var errBox = document.getElementById('checkout-error');
-      var btn = document.getElementById('btn-submit-checkout');
-      errBox.classList.add('hidden');
-      btn.disabled = true;
-      btn.textContent = 'Memproses...';
+        try {
+          var formData = new FormData(form);
+          var namaVal = String(formData.get('nama_pembeli') || '').trim();
+          var waVal = String(formData.get('whatsapp') || '').trim();
+          var alamatVal = String(formData.get('alamat') || '').trim();
 
-      try {
-        var formData = new FormData(form);
-        var namaVal = String(formData.get('nama_pembeli') || '').trim();
-        var waVal = String(formData.get('whatsapp') || '').trim();
-        var alamatVal = String(formData.get('alamat') || '').trim();
-
-        if (!/^[a-zA-Z\s]+$/.test(namaVal)) {
-          throw new Error('Nama penerima hanya boleh berisi huruf dan spasi.');
-        }
-        if (!/^[0-9]{9,15}$/.test(waVal)) {
-          throw new Error('Nomor WhatsApp hanya boleh berisi angka (9–15 digit).');
-        }
-        if (!/^[a-zA-Z0-9\s.,\-\/()]+$/.test(alamatVal)) {
-          throw new Error('Alamat lengkap tidak boleh mengandung karakter unik atau simbol khusus.');
-        }
-
-        var ringkasItem = keranjang.map(function (i) { return { id: i.id, qty: i.qty }; });
-        formData.append('items', JSON.stringify(ringkasItem));
-
-        var res = await fetch('/api/checkout', {
-          method: 'POST',
-          body: formData
-        });
-        var hasil = await res.json();
-
-        if (!res.ok) {
-          throw new Error(hasil.error || 'Checkout gagal diproses.');
-        }
-
-        // Perbarui tampilan stok di kartu katalog secara langsung
-        keranjang.forEach(function (item) {
-          var sisa = Math.max(0, item.stokMax - item.qty);
-          var label = document.getElementById('stok-label-' + item.id);
-          var addBtn = document.getElementById('btn-add-' + item.id);
-
-          if (label) {
-            label.textContent = sisa <= 0 ? 'Stok habis' : (sisa <= 10 ? 'Stok terbatas · ' + sisa : 'Stok ' + sisa);
-            label.className = 'text-xs ' + (sisa <= 10 ? 'text-soga font-medium' : 'text-muted');
+          if (!/^[a-zA-Z\s]+$/.test(namaVal)) {
+            throw new Error('Nama penerima hanya boleh berisi huruf dan spasi.');
           }
-          if (addBtn) {
-            addBtn.dataset.stok = sisa;
-            if (sisa <= 0) {
-              addBtn.disabled = true;
-              addBtn.textContent = 'Habis';
+          if (!/^[0-9]{9,15}$/.test(waVal)) {
+            throw new Error('Nomor WhatsApp hanya boleh berisi angka (9–15 digit).');
+          }
+          if (!/^[a-zA-Z0-9\s.,\-\/()]+$/.test(alamatVal)) {
+            throw new Error('Alamat lengkap tidak boleh mengandung karakter unik atau simbol khusus.');
+          }
+
+          var ringkasItem = keranjang.map(function (i) { return { id: i.id, qty: i.qty }; });
+          formData.append('items', JSON.stringify(ringkasItem));
+
+          var res = await fetch('/api/checkout', {
+            method: 'POST',
+            body: formData
+          });
+          var hasil = await res.json();
+
+          if (!res.ok) {
+            throw new Error(hasil.error || 'Checkout gagal diproses.');
+          }
+
+          keranjang.forEach(function (item) {
+            var sisa = Math.max(0, item.stokMax - item.qty);
+            var label = document.getElementById('stok-label-' + item.id);
+            var addBtn = document.getElementById('btn-add-' + item.id);
+
+            if (label) {
+              label.textContent = sisa <= 0 ? 'Stok habis' : (sisa <= 10 ? 'Stok terbatas · ' + sisa : 'Stok ' + sisa);
+              label.className = 'text-xs ' + (sisa <= 10 ? 'text-soga font-medium' : 'text-muted');
+            }
+            if (addBtn) {
+              addBtn.dataset.stok = sisa;
+              if (sisa <= 0) {
+                addBtn.disabled = true;
+                addBtn.textContent = 'Habis';
+              }
+            }
+          });
+
+          keranjang = [];
+          localStorage.removeItem('kriya_cart');
+          renderKeranjang();
+          form.reset();
+          form.classList.add('hidden');
+
+          document.getElementById('receipt-code').textContent = hasil.data.kode_pesanan;
+          document.getElementById('receipt-total').textContent = formatIdr(hasil.data.total_harga);
+          document.getElementById('checkout-success').classList.remove('hidden');
+        } catch (err) {
+          errBox.textContent = err.message;
+          errBox.classList.remove('hidden');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Kirim Pesanan';
+        }
+      });
+    }
+
+    // Form Chatbot AI
+    var chatForm = document.getElementById('chat-form');
+    if (chatForm) {
+      chatForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var input = document.getElementById('chat-input');
+        var sendBtn = document.getElementById('chat-send-btn');
+        var quickBox = document.getElementById('chat-quick-prompts');
+        var box = document.getElementById('chat-messages');
+
+        var pesan = input.value.trim();
+        if (!pesan) return;
+
+        if (quickBox) quickBox.classList.add('hidden');
+        tambahGelembungChat('user', pesan);
+        input.value = '';
+        input.disabled = true;
+        sendBtn.disabled = true;
+
+        var typing = document.createElement('div');
+        typing.id = 'chat-typing';
+        typing.className = 'mr-auto bg-white border border-line text-muted rounded-xl rounded-tl-sm px-3 py-2 text-[11px]';
+        typing.textContent = 'Memeriksa katalog...';
+        box.appendChild(typing);
+        box.scrollTop = box.scrollHeight;
+
+        try {
+          var res = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pesan: pesan, riwayat: riwayatChat })
+          });
+          var data = await res.json();
+          typing.remove();
+
+          if (!res.ok) {
+            tambahGelembungChat('model', data.error || 'Asisten sedang tidak tersedia.', data.whatsappUrl);
+          } else {
+            tambahGelembungChat('model', data.balasan);
+            riwayatChat.push({ role: 'user', text: pesan });
+            riwayatChat.push({ role: 'model', text: data.balasan });
+            if (riwayatChat.length > 6) riwayatChat = riwayatChat.slice(-6);
+            if (data.whatsappUrl) {
+              var waLink = document.getElementById('chat-wa-link');
+              if (waLink) waLink.href = data.whatsappUrl;
             }
           }
-        });
-
-        // Kosongkan keranjang dan tampilkan bukti transaksi
-        keranjang = [];
-        localStorage.removeItem('kriya_cart');
-        renderKeranjang();
-        form.reset();
-        form.classList.add('hidden');
-
-        document.getElementById('receipt-code').textContent = hasil.data.kode_pesanan;
-        document.getElementById('receipt-total').textContent = formatIdr(hasil.data.total_harga);
-        document.getElementById('checkout-success').classList.remove('hidden');
-      } catch (err) {
-        errBox.textContent = err.message;
-        errBox.classList.remove('hidden');
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Kirim Pesanan';
-      }
-    });
+        } catch (err) {
+          typing.remove();
+          tambahGelembungChat('model', 'Gagal terhubung ke server. Silakan hubungi pengrajin langsung melalui tombol WhatsApp di bawah.');
+        } finally {
+          input.disabled = false;
+          sendBtn.disabled = false;
+          input.focus();
+        }
+      });
+    }
   });
 </script>
 </body>
