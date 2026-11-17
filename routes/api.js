@@ -1,16 +1,20 @@
 const express = require('express');
 const { unggahGambar } = require('../middlewares/upload');
+const { cekAdminApi } = require('../middlewares/authAdmin');
 const api = require('../controllers/apiController');
 
 const router = express.Router();
 
-router.post('/upload', unggahGambar, api.unggahGambar);
 router.get('/status', api.status);
 
+// Rute publik untuk katalog pembeli
 router.get('/produk', api.daftarProduk);
 router.get('/produk/:id', api.detailProduk);
-router.post('/produk', api.tambahProduk);
-router.put('/produk/:id', api.ubahProduk);
-router.delete('/produk/:id', api.hapusProduk);
+
+// Rute terkunci khusus pengelola
+router.post('/upload', cekAdminApi, unggahGambar, api.unggahGambar);
+router.post('/produk', cekAdminApi, api.tambahProduk);
+router.put('/produk/:id', cekAdminApi, api.ubahProduk);
+router.delete('/produk/:id', cekAdminApi, api.hapusProduk);
 
 module.exports = router;
