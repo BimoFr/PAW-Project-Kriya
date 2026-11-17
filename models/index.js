@@ -22,7 +22,7 @@ async function initDatabase() {
   }
   await sequelize.authenticate();
   require('./produkModel');
-  await sequelize.sync();
+  await sequelize.sync({ alter: true });
 }
 
 module.exports = { sequelize, initDatabase };
