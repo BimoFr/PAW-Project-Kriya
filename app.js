@@ -17,6 +17,7 @@ app.locals.appName = config.appName;
 app.locals.tagline = config.tagline;
 app.locals.formatRupiah = formatRupiah;
 
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(logger);
 app.use(express.json());
 app.use(routes);
