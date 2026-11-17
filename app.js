@@ -1,5 +1,6 @@
 const path = require('path');
 const express = require('express');
+const session = require('express-session'); // <-- TAMBAHAN 1
 const config = require('./config');
 const logger = require('./middlewares/logger');
 const errorHandler = require('./middlewares/errorHandler');
@@ -20,6 +21,21 @@ app.locals.formatRupiah = formatRupiah;
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(logger);
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // <-- TAMBAHAN 2 (wajib untuk form POST /masuk)
+
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'kriya_secret_key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { httpOnly: true, maxAge: 1000 * 60 * 60 * 4 } // 4 jam
+}));
+
+// Teruskan status login ke semua template EJS
+app.use((req, res, next) => {
+  res.locals.isAdmin = Boolean(req.session && req.session.isAdmin);
+  next();
+});
+
 app.use(routes);
 
 app.use((req, res) => {
