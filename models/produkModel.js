@@ -2,7 +2,6 @@ const { DataTypes } = require('sequelize');
 const { sequelize } = require('./index');
 
 const KATEGORI = ['Batik', 'Tenun'];
-const MOTIF = ['parang', 'mega', 'kawung', 'lurik', 'ikat'];
 
 const Produk = sequelize.define(
   'Produk',
@@ -12,7 +11,7 @@ const Produk = sequelize.define(
     harga: { type: DataTypes.INTEGER, allowNull: false },
     stok: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
     kategori: { type: DataTypes.STRING(20), allowNull: false },
-    motif: { type: DataTypes.STRING(20), allowNull: false },
+    motif: { type: DataTypes.STRING(20), allowNull: true, defaultValue: '' },
     gambar: { type: DataTypes.STRING(255), allowNull: true },
   },
   { tableName: 'produk' }
@@ -55,4 +54,4 @@ async function bulkCreate(list) {
   return Produk.bulkCreate(list);
 }
 
-module.exports = { KATEGORI, MOTIF, getAll, getById, create, update, remove, count, bulkCreate };
+module.exports = { KATEGORI, getAll, getById, create, update, remove, count, bulkCreate };
