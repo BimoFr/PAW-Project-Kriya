@@ -1,4 +1,4 @@
-const { KATEGORI, MOTIF } = require('../models/produkModel');
+const { KATEGORI } = require('../models/produkModel');
 
 // Memvalidasi body produk. `parsial: true` dipakai PUT (hanya field yang dikirim dicek).
 function validasiProduk(body = {}, { parsial = false } = {}) {
@@ -33,17 +33,15 @@ function validasiProduk(body = {}, { parsial = false } = {}) {
     else data.kategori = k;
   }
 
-  if (!parsial || ada('motif')) {
-    const m = String(body.motif ?? '').toLowerCase();
-    if (!MOTIF.includes(m)) errors.push(`motif harus salah satu dari: ${MOTIF.join(', ')}`);
-    else data.motif = m;
+  if (!parsial) {
+    data.motif = '';
   }
 
   if (parsial && Object.keys(data).length === 0 && errors.length === 0) {
     errors.push('tidak ada field yang dikirim untuk diperbarui');
   }
 
-    if (body.gambar !== undefined) {
+  if (body.gambar !== undefined) {
     const g = String(body.gambar ?? '').trim();
     if (g === '') data.gambar = null;
     else if (!/^[\w-]+\.(jpe?g|png|webp)$/i.test(g)) {
