@@ -1,39 +1,150 @@
 <%- include('partials/head', { title }) %>
 <%- include('partials/navbar') %>
 
-<main id="konten">
+<%
+  const produkUnggulan = (Array.isArray(produk) && produk.length > 0)
+    ? (produk.find((item) => item.gambar) || produk[0])
+    : null;
+  const jumlahBatik = Array.isArray(produk) ? produk.filter((p) => String(p.kategori).toLowerCase() === 'batik').length : 0;
+  const jumlahTenun = Array.isArray(produk) ? produk.filter((p) => String(p.kategori).toLowerCase() === 'tenun').length : 0;
+%>
 
-  <!-- Hero -->
-  <section class="max-w-6xl mx-auto px-5 sm:px-8 pt-14 pb-16 sm:pt-20 sm:pb-24">
-    <div class="max-w-3xl">
-      <p class="rise text-sm font-medium text-soga mb-5">Batik &amp; tenun Nusantara</p>
-      <h1 class="rise rise-2 font-display font-semibold tracking-tight leading-[1.02] text-[2.75rem] sm:text-6xl lg:text-[4.5rem]">
-        Kain karya pengrajin, langsung ke tanganmu.
-      </h1>
-      <div class="rise rise-3 mt-9 flex flex-wrap items-center gap-x-6 gap-y-4">
-        <a href="#produk" class="inline-flex items-center gap-2 bg-ink text-paper font-medium text-sm px-6 py-3.5 rounded-lg transition-colors duration-200 hover:bg-soga">
-          Lihat produk
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
-        </a>
+<main id="konten" class="relative overflow-x-clip">
+
+  <!-- Hero 2 Kolom dengan Tekstur Latar Halus -->
+  <section class="relative border-b border-line">
+    <!-- Tekstur Garis Geometris Halus -->
+    <div aria-hidden="true"
+         class="pointer-events-none absolute inset-0 opacity-[0.035]"
+         style="background-image: radial-gradient(#1c1917 1px, transparent 1px), radial-gradient(#8b5a2b 1px, transparent 1px); background-size: 28px 28px; background-position: 0 0, 14px 14px;">
+    </div>
+
+    <div class="relative max-w-6xl mx-auto px-5 sm:px-8 pt-12 pb-16 sm:pt-16 sm:pb-24">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+
+        <!-- Kolom Kiri: Copywriting Editorial & CTA -->
+        <div class="lg:col-span-7">
+          <div class="rise inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-soga/30 bg-soga/10 text-soga text-xs font-medium mb-6">
+            <span class="w-1.5 h-1.5 rounded-full bg-soga animate-pulse"></span>
+            <span>Kurasi Batik &amp; Tenun Karya Pengrajin Nusantara</span>
+          </div>
+
+          <h1 class="rise rise-2 font-display font-semibold tracking-tight leading-[1.04] text-[2.65rem] sm:text-6xl lg:text-[4.25rem] text-ink">
+            Kain karya pengrajin, langsung ke tanganmu.
+          </h1>
+
+          <p class="rise rise-3 mt-6 text-base sm:text-lg text-muted leading-relaxed max-w-xl">
+            Setiap helai batik tulis, cap, dan tenun ikat dikurasi langsung dari perajin lokal dengan pencatatan stok real-time dan asisten kurator AI untuk membantumu memilih wastra terbaik.
+          </p>
+
+          <div class="rise rise-3 mt-8 flex flex-wrap items-center gap-3.5">
+            <a href="#produk"
+               class="inline-flex items-center gap-2.5 bg-ink text-paper font-medium text-sm px-6 py-3.5 rounded-xl transition-all duration-200 hover:bg-soga hover:-translate-y-0.5 shadow-sm">
+              <span>Jelajahi Koleksi</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 5v14M6 13l6 6 6-6"/>
+              </svg>
+            </a>
+
+            <button type="button" id="btn-hero-ai"
+                    class="inline-flex items-center gap-2 bg-white text-ink border border-line font-medium text-sm px-5 py-3.5 rounded-xl transition-all duration-200 hover:border-ink">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-soga" aria-hidden="true">
+                <path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1m0-12.8-2.1 2.1M7.7 16.3l-2.1 2.1"/>
+              </svg>
+              <span>Tanya Rekomendasi AI</span>
+            </button>
+          </div>
+
+          <!-- Ringkasan Statistik Etalase -->
+          <div class="mt-10 pt-7 border-t border-line/80 grid grid-cols-3 gap-4 max-w-md">
+            <div>
+              <p class="font-display text-2xl font-semibold text-ink tabular-nums"><%= produk.length %></p>
+              <p class="text-xs text-muted mt-0.5">Koleksi Tersedia</p>
+            </div>
+            <div>
+              <p class="font-display text-2xl font-semibold text-ink tabular-nums"><%= jumlahBatik %> / <%= jumlahTenun %></p>
+              <p class="text-xs text-muted mt-0.5">Batik &amp; Tenun</p>
+            </div>
+            <div>
+              <p class="font-display text-2xl font-semibold text-soga">100%</p>
+              <p class="text-xs text-muted mt-0.5">Karya Pengrajin</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Kolom Kanan: Showcase Visual Berlapis -->
+        <div class="lg:col-span-5">
+          <div class="relative mx-auto max-w-md">
+            <!-- Bingkai Aksen Latar -->
+            <div aria-hidden="true" class="hidden sm:block absolute -inset-3 rounded-2xl border border-soga/25 bg-soga/5 rotate-2"></div>
+
+            <div class="relative bg-white border border-line rounded-2xl p-3.5 shadow-sm">
+              <div class="relative aspect-[4/5] rounded-xl overflow-hidden bg-paper">
+                <% if (produkUnggulan && produkUnggulan.gambar) { %>
+                  <img src="/images/produk/<%= produkUnggulan.gambar %>"
+                       alt="<%= produkUnggulan.nama %>"
+                       class="w-full h-full object-cover">
+                <% } else { %>
+                  <div class="w-full h-full flex flex-col items-center justify-center p-8 text-center bg-gradient-to-br from-paper via-white to-soga/10">
+                    <span class="text-xs font-medium uppercase tracking-widest text-soga">Wastra Nusantara</span>
+                    <p class="font-display text-2xl font-semibold text-ink mt-2">Warisan Kriya Asli Indonesia</p>
+                  </div>
+                <% } %>
+
+                <!-- Overlay Info Produk Unggulan -->
+                <% if (produkUnggulan) { %>
+                  <div class="absolute inset-x-3 bottom-3 rounded-xl bg-white/95 backdrop-blur-sm border border-line p-3.5 shadow-sm">
+                    <div class="flex items-center justify-between gap-2">
+                      <span class="text-[11px] font-medium uppercase tracking-wider text-soga">Sorotan Koleksi · <%= produkUnggulan.kategori %></span>
+                      <span class="text-xs font-semibold text-ink tabular-nums"><%= formatRupiah(produkUnggulan.harga) %></span>
+                    </div>
+                    <p class="font-display font-semibold text-sm text-ink mt-1 truncate"><%= produkUnggulan.nama %></p>
+                  </div>
+                <% } %>
+              </div>
+            </div>
+
+            <!-- Floating Trust Pill -->
+            <div class="hidden sm:flex items-center gap-2.5 absolute -left-5 top-6 bg-ink text-paper px-3.5 py-2 rounded-xl shadow-md text-xs">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span class="font-medium">Stok Real-Time dari Pengrajin</span>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </section>
 
-  <!-- Produk -->
-  <section id="produk" class="border-t border-line scroll-mt-16">
+  <!-- Katalog Produk dengan Live Search & Rasio Kartu Tinggi -->
+  <section id="produk" class="scroll-mt-16">
     <div class="max-w-6xl mx-auto px-5 sm:px-8 py-16 sm:py-20">
-      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+      <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
         <div>
-          <h2 class="font-display font-semibold tracking-tight text-3xl sm:text-4xl">Produk</h2>
+          <p class="text-xs font-medium uppercase tracking-widest text-soga">Etalase Wastra</p>
+          <h2 class="font-display font-semibold tracking-tight text-3xl sm:text-4xl text-ink mt-1">Koleksi Pilihan</h2>
         </div>
 
-        <div class="flex flex-wrap gap-2" role="group" aria-label="Filter kategori">
-          <button type="button" data-filter="semua" aria-pressed="true"
-                  class="px-4 py-2 rounded-full border border-ink bg-ink text-paper text-sm font-medium transition-colors duration-200">Semua</button>
-          <% kategori.forEach(function (k) { %>
-            <button type="button" data-filter="<%= k.toLowerCase() %>" aria-pressed="false"
-                    class="px-4 py-2 rounded-full border border-line text-sm font-medium transition-colors duration-200 hover:border-ink"><%= k %></button>
-          <% }) %>
+        <!-- Bar Kontrol: Live Search + Filter Kategori -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div class="relative">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                 class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+            </svg>
+            <input type="search" id="cari-produk" placeholder="Cari nama kain atau deskripsi..."
+                   aria-label="Cari produk"
+                   class="w-full sm:w-64 pl-9 pr-3.5 py-2 rounded-full border border-line bg-white text-sm text-ink placeholder:text-muted focus:outline-none focus:border-ink transition-colors">
+          </div>
+
+          <div class="flex flex-wrap gap-2" role="group" aria-label="Filter kategori">
+            <button type="button" data-filter="semua" aria-pressed="true"
+                    class="btn-filter px-4 py-2 rounded-full border border-ink bg-ink text-paper text-sm font-medium transition-colors duration-200">Semua</button>
+            <% kategori.forEach(function (k) { %>
+              <button type="button" data-filter="<%= k.toLowerCase() %>" aria-pressed="false"
+                      class="btn-filter px-4 py-2 rounded-full border border-line bg-white text-sm font-medium text-ink transition-colors duration-200 hover:border-ink"><%= k %></button>
+            <% }) %>
+          </div>
         </div>
       </div>
 
@@ -46,26 +157,62 @@
         </p>
       <% } %>
 
-      <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <!-- Pesan Kosong Saat Pencarian Tidak Ditemukan -->
+      <div id="katalog-kosong" class="hidden relative z-10 mt-10 rounded-2xl border border-line bg-white p-10 text-center shadow-sm">
+        <p class="font-display text-lg font-semibold text-ink">Kain yang dicari tidak ditemukan</p>
+        <p class="text-sm text-muted mt-1">Coba gunakan kata kunci lain atau tanyakan rekomendasi langsung pada Asisten AI Kriya.</p>
+        <button type="button" id="btn-reset-cari"
+                class="mt-4 relative z-20 px-4 py-2 rounded-lg border border-ink text-xs font-medium text-ink hover:bg-ink hover:text-paper transition-colors cursor-pointer">
+          Reset Pencarian
+        </button>
+      </div>
+
+      <div id="grid-produk" class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <% produk.forEach(function (p) { %>
           <article data-kategori="<%= p.kategori.toLowerCase() %>"
-                   class="group flex flex-col bg-white border border-line rounded-xl overflow-hidden transition duration-300 hover:-translate-y-0.5 hover:border-ink/40">
-            <div class="overflow-hidden aspect-[4/3] bg-white">
+                   data-nama="<%= p.nama %>"
+                   data-deskripsi="<%= p.deskripsi %>"
+                   data-harga="<%= formatRupiah(p.harga) %>"
+                   data-harga-angka="<%= p.harga %>"
+                   data-stok="<%= p.stok %>"
+                   data-gambar="<%= p.gambar ? '/images/produk/' + p.gambar : '' %>"
+                   data-id="<%= p.id %>"
+                   class="kartu-produk group flex flex-col bg-white border border-line rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-ink/40 hover:shadow-md">
+
+            <!-- Gambar Rasio Tinggi (4:5) + Badge Kategori & Quick View -->
+            <div class="relative overflow-hidden aspect-[4/5] bg-paper cursor-pointer" onclick="bukaDetailProduk(this.closest('article'))">
               <% if (p.gambar) { %>
                 <img src="/images/produk/<%= p.gambar %>" alt="<%= p.nama %>" loading="lazy"
                      class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
               <% } else { %>
-                <div class="kat-<%= p.kategori.toLowerCase() %> w-full h-full bg-paper transition-transform duration-500 group-hover:scale-105" aria-hidden="true"></div>
+                <div class="kat-<%= p.kategori.toLowerCase() %> w-full h-full bg-paper flex items-center justify-center text-xs text-muted transition-transform duration-500 group-hover:scale-105" aria-hidden="true">
+                  <%= p.kategori %>
+                </div>
               <% } %>
+
+              <span class="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-white/90 backdrop-blur-xs border border-line/80 text-[11px] font-medium uppercase tracking-wider text-ink">
+                <%= p.kategori %>
+              </span>
+
+              <span class="absolute bottom-3 right-3 opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200 px-3 py-1.5 rounded-lg bg-ink/90 text-paper text-[11px] font-medium">
+                Lihat Detail
+              </span>
             </div>
+
+            <!-- Konten Kartu -->
             <div class="flex flex-col flex-1 p-5">
-              <p class="text-xs font-medium uppercase tracking-wider text-muted"><%= p.kategori %></p>
-              <h3 class="mt-2 font-display font-semibold text-lg leading-snug"><%= p.nama %></h3>
-              <p class="mt-2 text-sm text-muted leading-relaxed"><%= p.deskripsi %></p>
+              <h3 onclick="bukaDetailProduk(this.closest('article'))"
+                  class="font-display font-semibold text-lg leading-snug text-ink cursor-pointer hover:text-soga transition-colors">
+                <%= p.nama %>
+              </h3>
+
+              <p class="mt-2 text-sm text-muted leading-relaxed line-clamp-2">
+                <%= p.deskripsi %>
+              </p>
 
               <div class="mt-auto pt-5">
-                <div class="flex items-end justify-between gap-3">
-                  <p class="font-semibold"><%= formatRupiah(p.harga) %></p>
+                <div class="flex items-end justify-between gap-2 pt-3 border-t border-line/70">
+                  <p class="font-semibold text-ink tabular-nums"><%= formatRupiah(p.harga) %></p>
                   <p id="stok-label-<%= p.id %>" class="text-xs <%= p.stok <= 10 ? 'text-soga font-medium' : 'text-muted' %>">
                     <% if (p.stok <= 0) { %>
                       Stok habis
@@ -77,17 +224,26 @@
                   </p>
                 </div>
 
-                <button type="button"
-                        id="btn-add-<%= p.id %>"
-                        data-id="<%= p.id %>"
-                        data-nama="<%= p.nama %>"
-                        data-harga="<%= p.harga %>"
-                        data-stok="<%= p.stok %>"
-                        <%= p.stok <= 0 ? 'disabled' : '' %>
-                        onclick="tambahDariTombol(this)"
-                        class="mt-3.5 w-full py-2 px-3 rounded-lg border border-ink text-xs font-medium text-ink hover:bg-ink hover:text-paper disabled:opacity-40 disabled:pointer-events-none transition-colors duration-200">
-                  <%= p.stok > 0 ? '+ Keranjang' : 'Habis' %>
-                </button>
+                <div class="mt-3.5 flex items-center gap-2">
+                  <button type="button"
+                          id="btn-add-<%= p.id %>"
+                          data-id="<%= p.id %>"
+                          data-nama="<%= p.nama %>"
+                          data-harga="<%= p.harga %>"
+                          data-stok="<%= p.stok %>"
+                          <%= p.stok <= 0 ? 'disabled' : '' %>
+                          onclick="tambahDariTombol(this)"
+                          class="flex-1 py-2.5 px-3 rounded-xl border border-ink bg-ink text-paper text-xs font-medium hover:bg-soga hover:border-soga disabled:bg-transparent disabled:text-ink disabled:opacity-40 disabled:pointer-events-none transition-colors duration-200">
+                    <%= p.stok > 0 ? '+ Keranjang' : 'Habis' %>
+                  </button>
+
+                  <button type="button"
+                          onclick="bukaDetailProduk(this.closest('article'))"
+                          aria-label="Detail <%= p.nama %>"
+                          class="py-2.5 px-3 rounded-xl border border-line text-xs font-medium text-muted hover:text-ink hover:border-ink transition-colors">
+                    Detail
+                  </button>
+                </div>
               </div>
             </div>
           </article>
@@ -95,7 +251,181 @@
       </div>
     </div>
   </section>
-</main>
+
+<!-- Modal Detail Produk -->
+<dialog id="dlg-detail-produk" class="w-full max-w-2xl rounded-2xl border border-line bg-paper p-0 text-ink shadow-2xl backdrop:bg-ink/60">
+  <div class="grid grid-cols-1 sm:grid-cols-2">
+    <div id="detail-gambar-wrap" class="aspect-[4/5] sm:aspect-auto sm:h-full bg-white border-b sm:border-b-0 sm:border-r border-line overflow-hidden flex items-center justify-center">
+      <img id="detail-gambar" src="" alt="" class="w-full h-full object-cover hidden">
+      <div id="detail-gambar-kosong" class="p-8 text-center text-xs text-muted">Foto tidak tersedia</div>
+    </div>
+
+    <div class="p-6 flex flex-col justify-between">
+      <div>
+        <div class="flex items-start justify-between gap-3">
+          <span id="detail-kategori" class="px-2.5 py-1 rounded-md bg-soga/10 text-soga text-[11px] font-medium uppercase tracking-wider"></span>
+          <button type="button" onclick="document.getElementById('dlg-detail-produk').close()" aria-label="Tutup detail"
+                  class="px-2.5 py-1 rounded-lg text-sm text-muted hover:text-ink">
+            &times;
+          </button>
+        </div>
+
+        <h3 id="detail-nama" class="font-display text-2xl font-semibold text-ink mt-3 leading-snug"></h3>
+        <p id="detail-harga" class="text-lg font-semibold text-soga mt-2 tabular-nums"></p>
+
+        <div class="mt-4 pt-4 border-t border-line">
+          <p class="text-[11px] font-medium uppercase tracking-wider text-muted mb-1.5">Deskripsi &amp; Karakteristik Kain</p>
+          <p id="detail-deskripsi" class="text-sm text-ink/90 leading-relaxed"></p>
+        </div>
+
+        <div class="mt-4 rounded-xl bg-white border border-line p-3 text-xs text-muted space-y-1">
+          <p class="font-medium text-ink">Panduan Perawatan Singkat:</p>
+          <p>Cuci terpisah menggunakan lerak atau sabun lembut, hindari pemutih, dan jemur di tempat teduh.</p>
+        </div>
+      </div>
+
+      <div class="mt-6 pt-4 border-t border-line flex items-center justify-between gap-3">
+        <span id="detail-stok" class="text-xs font-medium text-muted"></span>
+        <button type="button" id="detail-btn-keranjang"
+                class="px-5 py-2.5 rounded-xl bg-ink text-paper text-xs font-medium hover:bg-soga transition-colors disabled:opacity-40 disabled:pointer-events-none">
+          + Tambah ke Keranjang
+        </button>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<script>
+  // Modal Detail Produk & Live Search Katalog
+  function bukaDetailProduk(card) {
+    if (!card) return;
+    var dlg = document.getElementById('dlg-detail-produk');
+    if (!dlg) return;
+
+    var id = card.dataset.id;
+    var nama = card.dataset.nama || '';
+    var kategori = card.dataset.kategori || '';
+    var deskripsi = card.dataset.deskripsi || '-';
+    var hargaTeks = card.dataset.harga || '';
+    var stok = Number(card.dataset.stok || 0);
+    var gambar = card.dataset.gambar || '';
+
+    document.getElementById('detail-kategori').textContent = kategori;
+    document.getElementById('detail-nama').textContent = nama;
+    document.getElementById('detail-harga').textContent = hargaTeks;
+    document.getElementById('detail-deskripsi').textContent = deskripsi;
+
+    var stokEl = document.getElementById('detail-stok');
+    stokEl.textContent = stok > 0 ? ('Tersedia ' + stok + ' kain') : 'Stok habis';
+    stokEl.className = stok <= 10 ? 'text-xs font-medium text-soga' : 'text-xs font-medium text-muted';
+
+    var imgEl = document.getElementById('detail-gambar');
+    var kosongEl = document.getElementById('detail-gambar-kosong');
+    if (gambar) {
+      imgEl.src = gambar;
+      imgEl.alt = nama;
+      imgEl.classList.remove('hidden');
+      kosongEl.classList.add('hidden');
+    } else {
+      imgEl.classList.add('hidden');
+      kosongEl.classList.remove('hidden');
+    }
+
+    var btnAdd = document.getElementById('detail-btn-keranjang');
+    btnAdd.disabled = stok <= 0;
+    btnAdd.textContent = stok > 0 ? '+ Tambah ke Keranjang' : 'Stok Habis';
+    btnAdd.onclick = function () {
+      var tombolAsli = document.getElementById('btn-add-' + id);
+      if (tombolAsli && typeof tambahDariTombol === 'function') {
+        tambahDariTombol(tombolAsli);
+      }
+      dlg.close();
+    };
+
+    dlg.showModal();
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var dlgDetail = document.getElementById('dlg-detail-produk');
+    if (dlgDetail) {
+      dlgDetail.addEventListener('click', function (e) {
+        if (e.target === dlgDetail) dlgDetail.close();
+      });
+    }
+
+    // Tombol Hero untuk membuka widget chat AI
+    var btnHeroAi = document.getElementById('btn-hero-ai');
+    if (btnHeroAi) {
+      btnHeroAi.addEventListener('click', function () {
+        var tombolChat = document.querySelector('#chat-toggle, [data-chat-toggle], button[aria-controls*="chat"]');
+        if (tombolChat) tombolChat.click();
+      });
+    }
+
+    // Live Search yang bekerja berdampingan dengan filter kategori
+    var inputCari = document.getElementById('cari-produk');
+    var btnResetCari = document.getElementById('btn-reset-cari');
+    var boxKosong = document.getElementById('katalog-kosong');
+    var kartuList = Array.prototype.slice.call(document.querySelectorAll('.kartu-produk'));
+    var tombolFilter = document.querySelectorAll('.btn-filter');
+
+    function terapkanPencarian() {
+      if (!inputCari) return;
+      var q = inputCari.value.trim().toLowerCase();
+      var btnAktif = document.querySelector('.btn-filter[aria-pressed="true"]');
+      var katAktif = btnAktif ? btnAktif.dataset.filter : 'semua';
+      var tampil = 0;
+
+      kartuList.forEach(function (card) {
+        var cocokKat = katAktif === 'semua' || card.dataset.kategori === katAktif;
+        var teks = (card.dataset.nama + ' ' + card.dataset.deskripsi).toLowerCase();
+        var cocokCari = !q || teks.indexOf(q) !== -1;
+        var show = cocokKat && cocokCari;
+        card.classList.toggle('hidden', !show);
+        if (show) tampil++;
+      });
+
+      if (boxKosong) {
+        boxKosong.classList.toggle('hidden', tampil > 0 || kartuList.length === 0);
+      }
+    }
+
+    if (inputCari) {
+      inputCari.addEventListener('input', terapkanPencarian);
+    }
+
+    // Logika pergantian kelas aktif/pasif tombol filter secara seragam
+    tombolFilter.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        tombolFilter.forEach(function (b) {
+          b.setAttribute('aria-pressed', 'false');
+          b.className = 'btn-filter px-4 py-2 rounded-full border border-line bg-white text-sm font-medium text-ink transition-colors duration-200 hover:border-ink';
+        });
+        this.setAttribute('aria-pressed', 'true');
+        this.className = 'btn-filter px-4 py-2 rounded-full border border-ink bg-ink text-paper text-sm font-medium transition-colors duration-200';
+        terapkanPencarian();
+      });
+    });
+
+    if (btnResetCari && inputCari) {
+      btnResetCari.addEventListener('click', function () {
+        inputCari.value = '';
+        
+        // Kembalikan tombol filter kategori ke "Semua" agar produk muncul kembali
+        tombolFilter.forEach(function (b) {
+          var isSemua = b.dataset.filter === 'semua';
+          b.setAttribute('aria-pressed', isSemua ? 'true' : 'false');
+          b.className = 'btn-filter px-4 py-2 rounded-full border ' + 
+            (isSemua ? 'border-ink bg-ink text-paper' : 'border-line bg-white text-ink hover:border-ink') + 
+            ' text-sm font-medium transition-colors duration-200';
+        });
+
+        terapkanPencarian();
+        inputCari.focus();
+      });
+    }
+  });
+</script>
 
 <%- include('partials/chat-widget') %>
 <%- include('partials/cart-drawer') %>
