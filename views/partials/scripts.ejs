@@ -1,391 +1,491 @@
 <script>
-  // ---------- Menu mobile ----------
   (function () {
-    var btn = document.getElementById('menu-btn');
-    var menu = document.getElementById('menu-mobile');
-    if (!btn || !menu) return;
-    btn.addEventListener('click', function () {
-      var open = menu.classList.toggle('hidden') === false;
-      btn.setAttribute('aria-expanded', String(open));
-      btn.setAttribute('aria-label', open ? 'Tutup menu' : 'Buka menu');
-      document.getElementById('ico-open').classList.toggle('hidden', open);
-      document.getElementById('ico-close').classList.toggle('hidden', !open);
-    });
-    menu.querySelectorAll('a').forEach(function (a) {
-      a.addEventListener('click', function () { if (!menu.classList.contains('hidden')) btn.click(); });
-    });
-  })();
+    // =========================================================================
+    // 1. FILTER KATALOG PRODUK TANPA RELOAD (US-03)
+    // =========================================================================
+    var tombolFilter = document.querySelectorAll('[data-filter]');
+    var kartuProduk = document.querySelectorAll('article[data-kategori]');
 
-  // ---------- Status server (GET /api/status) ----------
-  (function () {
-    var out = document.getElementById('status-json');
-    var label = document.getElementById('status-label');
-    var dot = document.getElementById('status-dot');
-    if (!out) return;
+    tombolFilter.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var kategoriDipilih = btn.getAttribute('data-filter');
 
-    function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
-
-    function render(obj) {
-      var rows = Object.keys(obj).map(function (k, i, arr) {
-        var v = obj[k];
-        var val = typeof v === 'string'
-          ? '<span class="text-[#F0B58E]">"' + esc(v) + '"</span>'
-          : '<span class="text-[#F0B58E]">' + esc(v) + '</span>';
-        return '  <span class="text-[#9DB0CC]">"' + esc(k) + '"</span>: ' + val + (i < arr.length - 1 ? ',' : '');
-      });
-      out.innerHTML = '{\n' + rows.join('\n') + '\n}';
-    }
-
-    function setOnline(ok) {
-      label.textContent = ok ? 'Server berjalan' : 'Tidak terhubung';
-      dot.className = 'w-2 h-2 rounded-full ' + (ok ? 'bg-[#E0A458] dot-live' : 'bg-[#C46A5A]');
-    }
-
-    function load() {
-      fetch('/api/status')
-        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
-        .then(function (data) { render(data); setOnline(true); })
-        .catch(function () { setOnline(false); out.textContent = '{\n  "error": "Gagal memuat /api/status"\n}'; });
-    }
-
-    load();
-    setInterval(load, 10000);
-  })();
-
-  // ---------- Filter kategori ----------
-  (function () {
-    var chips = document.querySelectorAll('[data-filter]');
-    var cards = document.querySelectorAll('[data-kategori]');
-    var jumlah = document.getElementById('jumlah');
-    if (!chips.length) return;
-
-    chips.forEach(function (chip) {
-      chip.addEventListener('click', function () {
-        var f = chip.getAttribute('data-filter');
-        chips.forEach(function (c) {
-          var aktif = c === chip;
-          c.setAttribute('aria-pressed', String(aktif));
-          c.classList.toggle('bg-ink', aktif);
-          c.classList.toggle('text-paper', aktif);
-          c.classList.toggle('border-ink', aktif);
+        tombolFilter.forEach(function (b) {
+          var aktif = b === btn;
+          b.setAttribute('aria-pressed', aktif ? 'true' : 'false');
+          b.classList.toggle('border-ink', aktif);
+          b.classList.toggle('bg-ink', aktif);
+          b.classList.toggle('text-paper', aktif);
+          b.classList.toggle('border-line', !aktif);
+          b.classList.toggle('hover:border-ink', !aktif);
         });
 
-        var n = 0;
-        cards.forEach(function (card) {
-          var tampil = f === 'semua' || card.getAttribute('data-kategori') === f;
-          card.classList.remove('fade');
-          card.hidden = !tampil;
-          if (tampil) { n++; void card.offsetWidth; card.classList.add('fade'); }
+        kartuProduk.forEach(function (card) {
+          var katCard = card.getAttribute('data-kategori');
+          var tampil = kategoriDipilih === 'semua' || katCard === kategoriDipilih;
+          card.classList.toggle('hidden', !tampil);
         });
-        if (jumlah) jumlah.textContent = n + ' produk';
       });
     });
-  })();
 
-  // ---------- Keranjang Belanja & Guest Checkout ----------
-  var keranjang = JSON.parse(localStorage.getItem('kriya_cart') || '[]');
+    // =========================================================================
+    // 2. KERANJANG BELANJA & GUEST CHECKOUT (US-04)
+    // =========================================================================
+    var STORAGE_CART = 'kriya-keranjang-v1';
+    var keranjang = [];
 
-  function formatIdr(angka) {
-    return 'Rp ' + Number(angka).toLocaleString('id-ID');
-  }
+    try {
+      var tersimpan = JSON.parse(localStorage.getItem(STORAGE_CART) || '[]');
+      if (Array.isArray(tersimpan)) keranjang = tersimpan;
+    } catch (e) {
+      keranjang = [];
+    }
 
-  function escHtml(str) {
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
-  }
+    function simpanKeranjang() {
+      try {
+        localStorage.setItem(STORAGE_CART, JSON.stringify(keranjang));
+      } catch (e) {}
+    }
 
-  function simpanKeranjang() {
-    localStorage.setItem('kriya_cart', JSON.stringify(keranjang));
-    renderKeranjang();
-  }
+    function formatRp(angka) {
+      return 'Rp ' + Number(angka || 0).toLocaleString('id-ID');
+    }
 
-  function bukaKeranjang() {
-    var successBox = document.getElementById('checkout-success');
-    var overlay = document.getElementById('cart-overlay');
-    var drawer = document.getElementById('cart-drawer');
-    if (successBox) successBox.classList.add('hidden');
-    if (overlay) overlay.classList.remove('hidden');
-    if (drawer) drawer.classList.remove('hidden');
-    renderKeranjang();
-  }
+    function escHtml(str) {
+      return String(str || '').replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
 
-  function tutupKeranjang() {
-    var overlay = document.getElementById('cart-overlay');
-    var drawer = document.getElementById('cart-drawer');
-    if (overlay) overlay.classList.add('hidden');
-    if (drawer) drawer.classList.add('hidden');
-  }
+    function bukaKeranjang() {
+      var drawer = document.getElementById('cart-drawer');
+      var overlay = document.getElementById('cart-overlay');
+      if (overlay) overlay.classList.remove('hidden');
+      if (drawer) drawer.classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+      renderKeranjang();
+    }
 
-  function tambahDariTombol(btn) {
-    var id = Number(btn.dataset.id);
-    var nama = btn.dataset.nama;
-    var harga = Number(btn.dataset.harga);
-    var stok = Number(btn.dataset.stok);
-    tambahKeKeranjang(id, nama, harga, stok);
-  }
+    function tutupKeranjang() {
+      var drawer = document.getElementById('cart-drawer');
+      var overlay = document.getElementById('cart-overlay');
+      if (overlay) overlay.classList.add('hidden');
+      if (drawer) drawer.classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+    }
 
-  function tambahKeKeranjang(id, nama, harga, stokMax) {
-    if (stokMax <= 0) return;
+    function perbaruiBadgeKeranjang() {
+      var totalItem = keranjang.reduce(function (sum, item) {
+        return sum + Number(item.qty || 0);
+      }, 0);
 
-    var existing = keranjang.find(function (item) { return item.id === id; });
-    if (existing) {
-      if (existing.qty >= stokMax) {
-        alert('Maksimal pembelian sesuai stok tersedia (' + stokMax + ').');
+      var badges = document.querySelectorAll('#cart-badge, #cart-count, #jumlah-keranjang, [data-cart-count]');
+      badges.forEach(function (el) {
+        el.textContent = totalItem;
+      });
+
+      var btnNavbar = document.querySelector('button[onclick*="bukaKeranjang"]');
+      if (btnNavbar && badges.length === 0) {
+        var spanAngka = btnNavbar.querySelector('span:last-child');
+        if (spanAngka) spanAngka.textContent = totalItem;
+      }
+    }
+
+    function renderKeranjang() {
+      perbaruiBadgeKeranjang();
+
+      var listEl = document.getElementById('cart-items-container') || document.getElementById('cart-items');
+      var totalEl = document.getElementById('cart-total');
+      var formEl = document.getElementById('checkout-form');
+      var successEl = document.getElementById('checkout-success');
+      var errEl = document.getElementById('checkout-error');
+
+      var totalHarga = keranjang.reduce(function (sum, item) {
+        return sum + (Number(item.harga) * Number(item.qty));
+      }, 0);
+
+      if (totalEl) totalEl.textContent = formatRp(totalHarga);
+
+      if (!listEl) return;
+
+      if (keranjang.length === 0) {
+        listEl.innerHTML =
+          '<div class="bg-white border border-line rounded-xl p-6 text-center">' +
+            '<p class="text-sm text-muted">Keranjang belanja masih kosong.</p>' +
+          '</div>';
+        if (formEl) formEl.classList.add('hidden');
         return;
       }
-      existing.qty += 1;
-      existing.stokMax = stokMax;
-    } else {
-      keranjang.push({ id: id, nama: nama, harga: harga, qty: 1, stokMax: stokMax });
-    }
-    simpanKeranjang();
-    bukaKeranjang();
-  }
 
-  function ubahQty(id, delta) {
-    var idx = keranjang.findIndex(function (item) { return item.id === id; });
-    if (idx === -1) return;
+      if (successEl) successEl.classList.add('hidden');
+      if (errEl) errEl.classList.add('hidden');
+      if (formEl) formEl.classList.remove('hidden');
 
-    var baru = keranjang[idx].qty + delta;
-    if (baru <= 0) {
-      keranjang.splice(idx, 1);
-    } else if (baru <= keranjang[idx].stokMax) {
-      keranjang[idx].qty = baru;
-    }
-    simpanKeranjang();
-  }
-
-  function renderKeranjang() {
-    var badge = document.getElementById('cart-badge');
-    var container = document.getElementById('cart-items-container');
-    var form = document.getElementById('checkout-form');
-    var totalEl = document.getElementById('cart-total');
-
-    var totalItem = keranjang.reduce(function (sum, i) { return sum + i.qty; }, 0);
-    if (badge) badge.textContent = totalItem;
-
-    if (!container || !form || !totalEl) return;
-
-    if (keranjang.length === 0) {
-      container.innerHTML = '<p class="text-sm text-muted py-8 text-center">Keranjang belanjamu masih kosong.</p>';
-      form.classList.add('hidden');
-      return;
+      listEl.innerHTML = keranjang.map(function (item) {
+        return (
+          '<div class="bg-white border border-line rounded-xl p-3.5 flex items-center justify-between gap-3">' +
+            '<div class="min-w-0 flex-1">' +
+              '<p class="text-sm font-medium text-ink truncate">' + escHtml(item.nama) + '</p>' +
+              '<p class="text-xs text-muted mt-0.5">' + formatRp(item.harga) + ' &times; ' + item.qty + '</p>' +
+            '</div>' +
+            '<div class="flex items-center gap-1.5 shrink-0">' +
+              '<button type="button" onclick="ubahQtyKeranjang(' + item.id + ', -1)" class="w-7 h-7 rounded-md border border-line text-xs hover:border-ink">&minus;</button>' +
+              '<span class="w-6 text-center text-xs font-medium tabular-nums">' + item.qty + '</span>' +
+              '<button type="button" onclick="ubahQtyKeranjang(' + item.id + ', 1)" class="w-7 h-7 rounded-md border border-line text-xs hover:border-ink">+</button>' +
+              '<button type="button" onclick="hapusItemKeranjang(' + item.id + ')" aria-label="Hapus item" class="ml-1 px-1.5 py-1 text-xs text-soga hover:underline">&times;</button>' +
+            '</div>' +
+          '</div>'
+        );
+      }).join('');
     }
 
-    form.classList.remove('hidden');
-    var totalHarga = 0;
+    function tambahDariTombol(btn) {
+      if (!btn) return;
+      var id = Number(btn.dataset.id);
+      var nama = btn.dataset.nama || 'Produk';
+      var harga = Number(btn.dataset.harga || 0);
+      var stokMaks = Number(btn.dataset.stok || 0);
 
-    container.innerHTML = keranjang.map(function (item) {
-      var subtotal = item.harga * item.qty;
-      totalHarga += subtotal;
-      return (
-        '<div class="bg-white border border-line rounded-lg p-3.5 flex items-center justify-between gap-3">' +
-          '<div class="min-w-0">' +
-            '<p class="text-sm font-medium truncate">' + escHtml(item.nama) + '</p>' +
-            '<p class="text-xs text-muted mt-0.5">' + formatIdr(item.harga) + ' &times; ' + item.qty + '</p>' +
-          '</div>' +
-          '<div class="flex items-center gap-1.5 shrink-0">' +
-            '<button type="button" onclick="ubahQty(' + item.id + ', -1)" class="w-7 h-7 rounded border border-line text-xs hover:border-ink">&minus;</button>' +
-            '<span class="w-6 text-center text-xs font-medium tabular-nums">' + item.qty + '</span>' +
-            '<button type="button" onclick="ubahQty(' + item.id + ', 1)" class="w-7 h-7 rounded border border-line text-xs hover:border-ink">+</button>' +
-          '</div>' +
-        '</div>'
-      );
-    }).join('');
+      if (stokMaks <= 0) return;
 
-    totalEl.textContent = formatIdr(totalHarga);
-  }
-
-  // ---------- Chatbot Asisten Belanja AI (POST /api/chat) ----------
-  var riwayatChat = [];
-
-  function toggleChatWidget() {
-    var panel = document.getElementById('chat-panel');
-    var btn = document.getElementById('chat-toggle-btn');
-    if (!panel || !btn) return;
-    var terbuka = panel.classList.toggle('hidden') === false;
-    btn.setAttribute('aria-expanded', String(terbuka));
-    if (terbuka) {
-      var input = document.getElementById('chat-input');
-      if (input) input.focus();
-    }
-  }
-
-  function formatTeksBot(teks) {
-    return escHtml(teks)
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\n/g, '<br>');
-  }
-
-  function tambahGelembungChat(peran, teks, waFallbackUrl) {
-    var box = document.getElementById('chat-messages');
-    if (!box) return;
-
-    var div = document.createElement('div');
-    if (peran === 'user') {
-      div.className = 'ml-auto max-w-[85%] bg-ink text-paper rounded-xl rounded-tr-sm px-3 py-2';
-      div.innerHTML = escHtml(teks);
-    } else {
-      div.className = 'mr-auto max-w-[90%] bg-white border border-line text-ink rounded-xl rounded-tl-sm p-3 space-y-2';
-      div.innerHTML = '<div>' + formatTeksBot(teks) + '</div>';
-      if (waFallbackUrl) {
-        div.innerHTML += '<a href="' + escHtml(waFallbackUrl) + '" target="_blank" rel="noopener noreferrer" class="inline-block text-[11px] font-medium text-soga underline">Lanjutkan ke WhatsApp Pengrajin &rarr;</a>';
+      var ada = keranjang.find(function (item) { return item.id === id; });
+      if (ada) {
+        if (ada.qty >= stokMaks) {
+          alert('Jumlah di keranjang sudah mencapai batas stok tersedia (' + stokMaks + ').');
+          bukaKeranjang();
+          return;
+        }
+        ada.qty += 1;
+        ada.stok = stokMaks;
+      } else {
+        keranjang.push({ id: id, nama: nama, harga: harga, qty: 1, stok: stokMaks });
       }
+
+      simpanKeranjang();
+      renderKeranjang();
+
+      btn.textContent = 'Ditambahkan ✓';
+      setTimeout(function () {
+        var stokSekarang = Number(btn.dataset.stok || 0);
+        btn.textContent = stokSekarang > 0 ? '+ Keranjang' : 'Habis';
+      }, 900);
     }
 
-    box.appendChild(div);
-    box.scrollTop = box.scrollHeight;
-  }
+    function ubahQtyKeranjang(id, delta) {
+      var idx = keranjang.findIndex(function (item) { return item.id === Number(id); });
+      if (idx === -1) return;
 
-  function kirimPertanyaanCepat(teks) {
-    var input = document.getElementById('chat-input');
-    var form = document.getElementById('chat-form');
-    if (!input || !form) return;
-    input.value = teks;
-    form.dispatchEvent(new Event('submit', { cancelable: true }));
-  }
+      var baru = keranjang[idx].qty + delta;
+      if (baru <= 0) {
+        keranjang.splice(idx, 1);
+      } else if (keranjang[idx].stok && baru > keranjang[idx].stok) {
+        alert('Stok tersedia hanya ' + keranjang[idx].stok + ' unit.');
+        return;
+      } else {
+        keranjang[idx].qty = baru;
+      }
 
-  document.addEventListener('DOMContentLoaded', function () {
-    renderKeranjang();
+      simpanKeranjang();
+      renderKeranjang();
+    }
 
-    // Form Checkout
-    var form = document.getElementById('checkout-form');
-    if (form) {
-      form.addEventListener('submit', async function (e) {
+    function hapusItemKeranjang(id) {
+      keranjang = keranjang.filter(function (item) { return item.id !== Number(id); });
+      simpanKeranjang();
+      renderKeranjang();
+    }
+
+    // Submit form checkout (POST /api/checkout)
+    var formCheckout = document.getElementById('checkout-form');
+    if (formCheckout) {
+      formCheckout.addEventListener('submit', async function (e) {
         e.preventDefault();
+        if (keranjang.length === 0) {
+          alert('Keranjang belanja masih kosong.');
+          return;
+        }
+
+        var btnSubmit = document.getElementById('btn-submit-checkout') || formCheckout.querySelector('button[type="submit"]');
         var errBox = document.getElementById('checkout-error');
-        var btn = document.getElementById('btn-submit-checkout');
-        errBox.classList.add('hidden');
-        btn.disabled = true;
-        btn.textContent = 'Memproses...';
+        var okBox = document.getElementById('checkout-success');
+        if (errBox) errBox.classList.add('hidden');
+        if (okBox) okBox.classList.add('hidden');
+
+        var teksBtn = btnSubmit ? btnSubmit.textContent : '';
+        if (btnSubmit) {
+          btnSubmit.disabled = true;
+          btnSubmit.textContent = 'Memproses pesanan...';
+        }
 
         try {
-          var formData = new FormData(form);
-          var namaVal = String(formData.get('nama_pembeli') || '').trim();
-          var waVal = String(formData.get('whatsapp') || '').trim();
-          var alamatVal = String(formData.get('alamat') || '').trim();
-
-          if (!/^[a-zA-Z\s]+$/.test(namaVal)) {
-            throw new Error('Nama penerima hanya boleh berisi huruf dan spasi.');
-          }
-          if (!/^[0-9]{9,15}$/.test(waVal)) {
-            throw new Error('Nomor WhatsApp hanya boleh berisi angka (9–15 digit).');
-          }
-          if (!/^[a-zA-Z0-9\s.,\-\/()]+$/.test(alamatVal)) {
-            throw new Error('Alamat lengkap tidak boleh mengandung karakter unik atau simbol khusus.');
-          }
-
-          var ringkasItem = keranjang.map(function (i) { return { id: i.id, qty: i.qty }; });
-          formData.append('items', JSON.stringify(ringkasItem));
+          var fd = new FormData(formCheckout);
+          fd.set('items', JSON.stringify(keranjang.map(function (i) {
+            return { id: i.id, qty: i.qty };
+          })));
 
           var res = await fetch('/api/checkout', {
             method: 'POST',
-            body: formData
+            body: fd
           });
-          var hasil = await res.json();
+          var data = await res.json();
 
           if (!res.ok) {
-            throw new Error(hasil.error || 'Checkout gagal diproses.');
+            throw new Error(data.error || 'Checkout gagal diproses.');
           }
 
+          // Perbarui tampilan stok di kartu produk secara langsung
           keranjang.forEach(function (item) {
-            var sisa = Math.max(0, item.stokMax - item.qty);
-            var label = document.getElementById('stok-label-' + item.id);
-            var addBtn = document.getElementById('btn-add-' + item.id);
-
-            if (label) {
-              label.textContent = sisa <= 0 ? 'Stok habis' : (sisa <= 10 ? 'Stok terbatas · ' + sisa : 'Stok ' + sisa);
-              label.className = 'text-xs ' + (sisa <= 10 ? 'text-soga font-medium' : 'text-muted');
-            }
-            if (addBtn) {
-              addBtn.dataset.stok = sisa;
+            var btnAdd = document.getElementById('btn-add-' + item.id);
+            var stokLbl = document.getElementById('stok-label-' + item.id);
+            if (btnAdd) {
+              var sisa = Math.max(0, Number(btnAdd.dataset.stok || 0) - item.qty);
+              btnAdd.dataset.stok = sisa;
               if (sisa <= 0) {
-                addBtn.disabled = true;
-                addBtn.textContent = 'Habis';
+                btnAdd.disabled = true;
+                btnAdd.textContent = 'Habis';
+              }
+              if (stokLbl) {
+                if (sisa <= 0) {
+                  stokLbl.textContent = 'Stok habis';
+                  stokLbl.className = 'text-xs text-soga font-medium';
+                } else if (sisa <= 10) {
+                  stokLbl.textContent = 'Stok terbatas · ' + sisa;
+                  stokLbl.className = 'text-xs text-soga font-medium';
+                } else {
+                  stokLbl.textContent = 'Stok ' + sisa;
+                }
               }
             }
           });
 
           keranjang = [];
-          localStorage.removeItem('kriya_cart');
+          simpanKeranjang();
+          formCheckout.reset();
           renderKeranjang();
-          form.reset();
-          form.classList.add('hidden');
 
-          document.getElementById('receipt-code').textContent = hasil.data.kode_pesanan;
-          document.getElementById('receipt-total').textContent = formatIdr(hasil.data.total_harga);
-          document.getElementById('checkout-success').classList.remove('hidden');
+          var listEl = document.getElementById('cart-items-container');
+          if (listEl) listEl.innerHTML = '';
+
+          var receiptCode = document.getElementById('receipt-code');
+          var receiptTotal = document.getElementById('receipt-total');
+          if (receiptCode) receiptCode.textContent = (data.data && data.data.kode_pesanan) || '-';
+          if (receiptTotal) receiptTotal.textContent = formatRp(data.data && data.data.total_harga);
+          if (okBox) okBox.classList.remove('hidden');
         } catch (err) {
-          errBox.textContent = err.message;
-          errBox.classList.remove('hidden');
-        } finally {
-          btn.disabled = false;
-          btn.textContent = 'Kirim Pesanan';
-        }
-      });
-    }
-
-    // Form Chatbot AI
-    var chatForm = document.getElementById('chat-form');
-    if (chatForm) {
-      chatForm.addEventListener('submit', async function (e) {
-        e.preventDefault();
-        var input = document.getElementById('chat-input');
-        var sendBtn = document.getElementById('chat-send-btn');
-        var quickBox = document.getElementById('chat-quick-prompts');
-        var box = document.getElementById('chat-messages');
-
-        var pesan = input.value.trim();
-        if (!pesan) return;
-
-        if (quickBox) quickBox.classList.add('hidden');
-        tambahGelembungChat('user', pesan);
-        input.value = '';
-        input.disabled = true;
-        sendBtn.disabled = true;
-
-        var typing = document.createElement('div');
-        typing.id = 'chat-typing';
-        typing.className = 'mr-auto bg-white border border-line text-muted rounded-xl rounded-tl-sm px-3 py-2 text-[11px]';
-        typing.textContent = 'Memeriksa katalog...';
-        box.appendChild(typing);
-        box.scrollTop = box.scrollHeight;
-
-        try {
-          var res = await fetch('/api/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ pesan: pesan, riwayat: riwayatChat })
-          });
-          var data = await res.json();
-          typing.remove();
-
-          if (!res.ok) {
-            tambahGelembungChat('model', data.error || 'Asisten sedang tidak tersedia.', data.whatsappUrl);
+          if (errBox) {
+            errBox.textContent = err.message;
+            errBox.classList.remove('hidden');
           } else {
-            tambahGelembungChat('model', data.balasan);
-            riwayatChat.push({ role: 'user', text: pesan });
-            riwayatChat.push({ role: 'model', text: data.balasan });
-            if (riwayatChat.length > 6) riwayatChat = riwayatChat.slice(-6);
-            if (data.whatsappUrl) {
-              var waLink = document.getElementById('chat-wa-link');
-              if (waLink) waLink.href = data.whatsappUrl;
-            }
+            alert(err.message);
           }
-        } catch (err) {
-          typing.remove();
-          tambahGelembungChat('model', 'Gagal terhubung ke server. Silakan hubungi pengrajin langsung melalui tombol WhatsApp di bawah.');
         } finally {
-          input.disabled = false;
-          sendBtn.disabled = false;
-          input.focus();
+          if (btnSubmit) {
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = teksBtn || 'Kirim Pesanan';
+          }
         }
       });
     }
-  });
+
+    // =========================================================================
+    // 3. CHATBOT ASISTEN BELANJA AI + PERSISTENSI LOCALSTORAGE (US-02 / F-02)
+    // =========================================================================
+    var STORAGE_CHAT = 'kriya-chat-history-v1';
+    var riwayatChat = [];
+
+    try {
+      var chatTersimpan = JSON.parse(localStorage.getItem(STORAGE_CHAT) || '[]');
+      if (Array.isArray(chatTersimpan)) riwayatChat = chatTersimpan;
+    } catch (e) {
+      riwayatChat = [];
+    }
+
+    function simpanRiwayatChat() {
+      try {
+        localStorage.setItem(STORAGE_CHAT, JSON.stringify(riwayatChat.slice(-20)));
+      } catch (e) {}
+    }
+
+    function cariPanelChat() {
+      return document.getElementById('chat-panel') ||
+             document.getElementById('chat-window') ||
+             document.getElementById('chat-box') ||
+             document.getElementById('widget-chat-panel');
+    }
+
+    function cariKontainerPesan() {
+      return document.getElementById('chat-messages') ||
+             document.getElementById('chat-list') ||
+             document.getElementById('pesan-chat') ||
+             document.getElementById('isi-chat');
+    }
+
+    function renderRiwayatChat() {
+      var box = cariKontainerPesan();
+      if (!box) return;
+
+      var sapaanAwal =
+        '<div class="bg-paper border border-line rounded-xl px-3.5 py-2.5 text-xs text-ink leading-relaxed">' +
+          'Halo! Saya Asisten Belanja Kriya. Tanyakan rekomendasi motif batik/tenun, harga, atau ketersediaan stok.' +
+        '</div>';
+
+      if (riwayatChat.length === 0) {
+        box.innerHTML = sapaanAwal;
+        return;
+      }
+
+      box.innerHTML = sapaanAwal + riwayatChat.map(function (msg) {
+        if (msg.role === 'user') {
+          return (
+            '<div class="flex justify-end">' +
+              '<div class="max-w-[85%] rounded-xl bg-ink text-paper px-3.5 py-2 text-xs leading-relaxed">' +
+                escHtml(msg.text) +
+              '</div>' +
+            '</div>'
+          );
+        }
+
+        return (
+          '<div class="flex justify-start">' +
+            '<div class="max-w-[88%] rounded-xl bg-paper border border-line text-ink px-3.5 py-2.5 text-xs leading-relaxed whitespace-pre-line">' +
+              escHtml(msg.text) +
+            '</div>' +
+          '</div>'
+        );
+      }).join('');
+
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function toggleChatWidget() {
+      var panel = cariPanelChat();
+      if (!panel) return;
+      var akanBuka = panel.classList.contains('hidden');
+      panel.classList.toggle('hidden');
+      if (akanBuka) {
+        renderRiwayatChat();
+        var input = document.getElementById('chat-input') || document.getElementById('input-chat') || panel.querySelector('input[type="text"], textarea');
+        if (input) input.focus();
+      }
+    }
+
+    function bukaChatWidget() {
+      var panel = cariPanelChat();
+      if (!panel) return;
+      panel.classList.remove('hidden');
+      renderRiwayatChat();
+    }
+
+    function tutupChatWidget() {
+      var panel = cariPanelChat();
+      if (!panel) return;
+      panel.classList.add('hidden');
+    }
+
+    function hapusRiwayatChat() {
+      riwayatChat = [];
+      simpanRiwayatChat();
+      renderRiwayatChat();
+    }
+
+    async function prosesKirimChat(teksPesan) {
+      var pesan = String(teksPesan || '').trim();
+      if (!pesan) return;
+
+      riwayatChat.push({ role: 'user', text: pesan });
+      simpanRiwayatChat();
+      renderRiwayatChat();
+
+      var box = cariKontainerPesan();
+      var loadingId = 'chat-loading-' + Date.now();
+      if (box) {
+        box.insertAdjacentHTML('beforeend',
+          '<div id="' + loadingId + '" class="text-xs text-muted italic px-1">Asisten Kriya sedang mengetik...</div>'
+        );
+        box.scrollTop = box.scrollHeight;
+      }
+
+      try {
+        var res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pesan: pesan,
+            riwayat: riwayatChat.slice(-6)
+          })
+        });
+        var data = await res.json();
+
+        var loadingEl = document.getElementById(loadingId);
+        if (loadingEl) loadingEl.remove();
+
+        if (!res.ok) {
+          riwayatChat.push({
+            role: 'assistant',
+            text: data.error || 'Sistem sedang sibuk, silakan coba beberapa saat lagi.'
+          });
+        } else {
+          riwayatChat.push({
+            role: 'assistant',
+            text: data.balasan || 'Maaf, belum ada jawaban.'
+          });
+        }
+      } catch (err) {
+        var loadingElErr = document.getElementById(loadingId);
+        if (loadingElErr) loadingElErr.remove();
+
+        riwayatChat.push({
+          role: 'assistant',
+          text: 'Koneksi terganggu. Silakan coba lagi beberapa saat lagi.'
+        });
+      }
+
+      simpanRiwayatChat();
+      renderRiwayatChat();
+    }
+
+    function kirimPesanChat(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      var panel = cariPanelChat() || document;
+      var input = document.getElementById('chat-input') ||
+                  document.getElementById('input-chat') ||
+                  panel.querySelector('input[type="text"], textarea');
+      if (!input) return;
+      var teks = input.value.trim();
+      if (!teks) return;
+      input.value = '';
+      prosesKirimChat(teks);
+    }
+
+    var formChat = document.getElementById('chat-form') || document.getElementById('form-chat');
+    if (formChat) {
+      formChat.addEventListener('submit', kirimPesanChat);
+    }
+
+    // Sinkronisasi jika stok diubah admin di tab lain
+    window.addEventListener('storage', function (e) {
+      if (e.key === 'kriya-produk-berubah') {
+        window.location.reload();
+      }
+    });
+
+    // Ekspos fungsi global untuk atribut onclick/onsubmit di EJS
+    window.tambahDariTombol = tambahDariTombol;
+    window.bukaKeranjang = bukaKeranjang;
+    window.tutupKeranjang = tutupKeranjang;
+    window.ubahQtyKeranjang = ubahQtyKeranjang;
+    window.hapusItemKeranjang = hapusItemKeranjang;
+    window.toggleChatWidget = toggleChatWidget;
+    window.bukaChatWidget = bukaChatWidget;
+    window.tutupChatWidget = tutupChatWidget;
+    window.hapusRiwayatChat = hapusRiwayatChat;
+    window.kirimPesanChat = kirimPesanChat;
+    window.kirimChat = kirimPesanChat;
+
+    // Inisialisasi tampilan awal
+    renderKeranjang();
+    renderRiwayatChat();
+  })();
 </script>
 </body>
 </html>
