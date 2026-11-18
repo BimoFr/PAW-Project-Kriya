@@ -25,6 +25,7 @@
     }
 
     function notif(teks) {
+      if (!toast) return;
       toast.textContent = teks; toast.classList.remove('hidden');
       clearTimeout(toastTimer); toastTimer = setTimeout(function () { toast.classList.add('hidden'); }, 3000);
     }
@@ -38,11 +39,11 @@
       var kat = p.kategori.toLowerCase();
       var thumb = p.gambar
         ? '<img src="/images/produk/' + encodeURIComponent(p.gambar) + '" alt="" class="w-14 h-14 rounded-lg object-cover shrink-0 border border-line">'
-        : '<div class="motif motif-' + esc(p.motif) + ' kat-' + esc(kat) + ' w-14 h-14 rounded-lg shrink-0" aria-hidden="true"></div>';
+        : '<div class="kat-' + esc(kat) + ' w-14 h-14 rounded-lg shrink-0 bg-paper border border-line" aria-hidden="true"></div>';
       return '<div class="fade flex flex-col sm:flex-row sm:items-center gap-4 py-5 border-b border-line">' +
         thumb +
         '<div class="flex-1 min-w-0"><p class="font-display font-semibold leading-snug">' + esc(p.nama) + '</p>' +
-        '<p class="text-sm text-muted">' + esc(p.kategori) + ' · ' + esc(p.motif) + ' · stok ' + esc(p.stok) + '</p></div>' +
+        '<p class="text-sm text-muted">' + esc(p.kategori) + ' · stok ' + esc(p.stok) + '</p></div>' +
         '<p class="font-semibold sm:w-32 sm:text-right">' + rp(p.harga) + '</p>' +
         '<div class="flex gap-2">' +
         '<button type="button" data-aksi="ubah" data-id="' + p.id + '" class="px-4 py-2 rounded-lg border border-line text-sm font-medium transition-colors hover:border-ink">Ubah</button>' +
@@ -60,8 +61,64 @@
     }
 
     function tampilError(daftarError) {
+      if (!errBox) { alert(daftarError.join('\n')); return; }
       errBox.innerHTML = daftarError.map(function (e) { return '<li>' + esc(e) + '</li>'; }).join('');
       errBox.classList.remove('hidden');
+    }
+
+    // ----- AI Auto-Caption Deskripsi Produk (F-06 / US-06) -----
+    function generateCaptionAI(btnEl) {
+      var targetForm = (btnEl && btnEl.closest && btnEl.closest('form')) || form;
+      var btn = btnEl || document.getElementById('btn-generate-caption');
+      if (!targetForm || !targetForm.elements) return;
+
+      var f = targetForm.elements;
+      var nama = (f.nama ? f.nama.value : '').trim();
+      var kategori = (f.kategori ? f.kategori.value : 'Batik').trim();
+      var harga = Number(f.harga ? f.harga.value : 0);
+      var deskripsiEl = f.deskripsi;
+
+      if (!nama) {
+        tampilError(['Isi nama produk terlebih dahulu sebelum menggunakan Generate Caption AI.']);
+        if (f.nama) f.nama.focus();
+        return;
+      }
+
+      if (errBox) errBox.classList.add('hidden');
+      var teksAsli = btn ? btn.innerHTML : 'Generate Caption AI';
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Membuat deskripsi...';
+      }
+
+      api('/api/generate-caption', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nama: nama, kategori: kategori, harga: harga })
+      })
+        .then(function (res) {
+          if (deskripsiEl) {
+            deskripsiEl.value = res.caption || '';
+            deskripsiEl.dispatchEvent(new Event('input', { bubbles: true }));
+            deskripsiEl.focus();
+          }
+          notif('Deskripsi produk berhasil dibuat oleh AI');
+        })
+        .catch(function (err) {
+          tampilError([err.message || 'Gagal membuat caption AI.']);
+        })
+        .then(function () {
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = teksAsli;
+          }
+        });
+    }
+    window.generateCaptionAI = generateCaptionAI;
+
+    var btnCaption = document.getElementById('btn-generate-caption');
+    if (btnCaption) {
+      btnCaption.addEventListener('click', function () { generateCaptionAI(btnCaption); });
     }
 
     // ----- Pemilih gambar -----
@@ -100,27 +157,34 @@
       editId = p ? p.id : null;
       document.getElementById('form-judul').textContent = p ? 'Ubah produk' : 'Tambah produk';
       form.reset(); errBox.classList.add('hidden');
-      if (p) ['nama', 'kategori', 'motif', 'harga', 'stok', 'deskripsi', 'gambar'].forEach(function (k) { form.elements[k].value = p[k] == null ? '' : p[k]; });
+      if (p) {
+        ['nama', 'kategori', 'harga', 'stok', 'deskripsi', 'gambar'].forEach(function (k) {
+          if (form.elements[k]) form.elements[k].value = p[k] == null ? '' : p[k];
+        });
+      }
       setPratinjau(p && p.gambar ? '/images/produk/' + encodeURIComponent(p.gambar) : null);
       dlgForm.showModal();
       form.elements.nama.focus();
     }
 
     async function simpanStatusPesanan(id) {
-  const status = document.getElementById(`status-ord-${id}`).value;
-  try {
-    const res = await fetch(`/api/pesanan/${id}/status`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Gagal memperbarui status');
-    alert(`Status pesanan berhasil diubah menjadi "${status}".`);
-  } catch (err) {
-    alert(err.message);
-  }
-}
+      var el = document.getElementById('status-ord-' + id);
+      if (!el) return;
+      var status = el.value;
+      try {
+        var res = await fetch('/api/pesanan/' + id + '/status', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: status })
+        });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Gagal memperbarui status');
+        notif('Status pesanan diubah menjadi "' + status + '"');
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+    window.simpanStatusPesanan = simpanStatusPesanan;
 
     document.getElementById('btn-tambah').addEventListener('click', function () { bukaForm(null); });
     document.getElementById('btn-batal').addEventListener('click', function () { dlgForm.close(); });
@@ -144,8 +208,11 @@
       e.preventDefault();
       var f = form.elements;
       var payload = {
-        nama: f.nama.value.trim(), kategori: f.kategori.value, motif: f.motif.value,
-        harga: f.harga.value, stok: f.stok.value, deskripsi: f.deskripsi.value.trim(),
+        nama: f.nama.value.trim(),
+        kategori: f.kategori.value,
+        harga: f.harga.value,
+        stok: f.stok.value,
+        deskripsi: f.deskripsi.value.trim(),
         gambar: f.gambar.value.trim()
       };
       var simpan = document.getElementById('btn-simpan');
