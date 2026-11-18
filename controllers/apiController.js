@@ -56,6 +56,16 @@ const detailProduk = asyncHandler(async (req, res) => {
 // POST /api/produk
 const tambahProduk = asyncHandler(async (req, res) => {
   const { errors, data } = validasiProduk(req.body);
+  const gambar = String(req.body.gambar || data.gambar || '').trim();
+
+  if (!gambar) {
+    if (!errors.some((msg) => /gambar|foto/i.test(msg))) {
+      errors.push('Foto produk wajib diunggah');
+    }
+  } else {
+    data.gambar = gambar;
+  }
+
   if (errors.length) return res.status(400).json({ error: 'Data tidak valid', detail: errors });
   res.status(201).json(await produkModel.create(data));
 });
@@ -211,7 +221,7 @@ const ubahStatusPesanan = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    const statusValid = ['Menunggu Verifikasi', 'Diproses', 'Dikirim'];
+    const statusValid = ['Menunggu Verifikasi', 'Proses Kirim', 'Pesanan Selesai'];
 
     if (!statusValid.includes(status)) {
       return res.status(400).json({ error: 'Status pesanan tidak valid.' });
@@ -259,7 +269,6 @@ const chatAsisten = async (req, res) => {
       });
     }
 
-    // Ambil katalog terbaru langsung dari MySQL (Database-Context Injection)
     const semuaProduk = await produkModel.getAll();
     const daftarKatalogTeks = semuaProduk.length
       ? semuaProduk.map((p) =>
@@ -289,7 +298,7 @@ const chatAsisten = async (req, res) => {
       { role: 'user', content: pesan }
     ];
 
-    const antreanModel = daftarModel.length === 1 ? [daftarModel[0], daftarModel[0]] : daftarModel;
+    const antreanModel = daftarModel.length === 1 ? [daftarModel[0], daftarModel[0], daftarModel[0]] : daftarModel;
 
     for (let i = 0; i < antreanModel.length; i++) {
       const modelAktif = antreanModel[i];
@@ -303,12 +312,12 @@ const chatAsisten = async (req, res) => {
             'HTTP-Referer': `http://localhost:${config.port}`,
             'X-Title': config.appName
           },
-          signal: AbortSignal.timeout(20000),
+          signal: AbortSignal.timeout(25000),
           body: JSON.stringify({
             model: modelAktif,
             messages,
             temperature: 0.35,
-            max_tokens: 600
+            max_tokens: 1000
           })
         });
 
@@ -322,6 +331,10 @@ const chatAsisten = async (req, res) => {
               balasan,
               whatsappUrl: waUrl
             });
+          }
+          if (i < antreanModel.length - 1) {
+            await jeda(800);
+            continue;
           }
         }
 
@@ -355,6 +368,108 @@ const chatAsisten = async (req, res) => {
   }
 };
 
+// POST /api/generate-caption (Admin - AI Auto-Caption Deskripsi F-06)
+const generateCaption = async (req, res) => {
+  try {
+    const nama = String(req.body.nama || '').trim();
+    const kategori = String(req.body.kategori || 'Batik').trim();
+    const harga = Number(req.body.harga || 0);
+    const apiKey = String(config.openrouterApiKey || '').trim();
+    const daftarModel = String(config.openrouterModel || '')
+      .split(',')
+      .map((m) => m.trim())
+      .filter(Boolean);
+
+    if (!nama) {
+      return res.status(400).json({ error: 'Isi nama produk terlebih dahulu sebelum membuat caption AI.' });
+    }
+
+    if (!apiKey || daftarModel.length === 0) {
+      return res.status(503).json({ error: 'Konfigurasi OpenRouter AI belum aktif di .env.' });
+    }
+
+    const promptSistem = [
+      `Kamu adalah copywriter profesional untuk "${config.appName}", toko daring kain batik dan tenun Nusantara.`,
+      'Tugasmu menulis deskripsi promosi produk yang menarik, elegan, jujur, dan ringkas untuk etalase toko.',
+      'Aturan penulisan:',
+      '- Tulis dalam bahasa Indonesia yang natural dan persuasif (2–3 kalimat, maksimal 280 karakter).',
+      '- Tonjolkan keindahan motif, kenyamanan bahan, dan kecocokan pemakaian (misalnya acara formal, kondangan, atau busana harian).',
+      '- JANGAN menggunakan tanda bintang (**), tagar (#), emoji berlebihan, atau kalimat pembuka seperti "Berikut deskripsi produk:". Langsung tulis teks deskripsinya saja.'
+    ].join('\n');
+
+    const infoHarga = harga > 0 ? `, Harga: Rp ${harga.toLocaleString('id-ID')}` : '';
+    const promptUser = `Buatkan deskripsi produk untuk -> Nama Produk: "${nama}", Kategori: ${kategori}${infoHarga}.`;
+
+    const antreanModel = daftarModel.length === 1 ? [daftarModel[0], daftarModel[0], daftarModel[0]] : daftarModel;
+
+    for (let i = 0; i < antreanModel.length; i++) {
+      const modelAktif = antreanModel[i];
+
+      try {
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': `http://localhost:${config.port}`,
+            'X-Title': config.appName
+          },
+          signal: AbortSignal.timeout(25000),
+          body: JSON.stringify({
+            model: modelAktif,
+            messages: [
+              { role: 'system', content: promptSistem },
+              { role: 'user', content: promptUser }
+            ],
+            temperature: 0.6,
+            max_tokens: 1000
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          const caption = data?.choices?.[0]?.message?.content?.trim().replace(/^["']|["']$/g, '');
+          if (caption) {
+            return res.json({
+              status: 'success',
+              caption
+            });
+          }
+          if (i < antreanModel.length - 1) {
+            await jeda(800);
+            continue;
+          }
+        }
+
+        console.error(`OpenRouter Auto-Caption error (${modelAktif}):`, response.status, JSON.stringify(data));
+
+        if ((response.status === 429 || response.status === 503 || response.status === 502) && i < antreanModel.length - 1) {
+          await jeda(1200);
+          continue;
+        }
+
+        break;
+      } catch (fetchErr) {
+        console.error(`OpenRouter Auto-Caption fetch gagal (${modelAktif}):`, fetchErr.message);
+        if (i < antreanModel.length - 1) {
+          await jeda(1200);
+          continue;
+        }
+      }
+    }
+
+    return res.status(502).json({
+      error: 'AI sedang sibuk. Silakan coba klik ulang atau isi deskripsi secara manual.'
+    });
+  } catch (err) {
+    console.error('Error generateCaption:', err);
+    return res.status(500).json({
+      error: 'Gagal terhubung ke layanan AI. Silakan isi deskripsi secara manual.'
+    });
+  }
+};
+
 function unggahGambar(req, res) {
   if (!req.file) return res.status(400).json({ error: 'Pilih file gambar terlebih dahulu' });
   res.status(201).json({ gambar: req.file.filename });
@@ -370,5 +485,6 @@ module.exports = {
   unggahGambar,
   checkout,
   ubahStatusPesanan,
-  chatAsisten
+  chatAsisten,
+  generateCaption
 };
