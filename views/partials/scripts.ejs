@@ -195,6 +195,23 @@
       renderKeranjang();
     }
 
+    function salinKodePesanan() {
+      var el = document.getElementById('receipt-code');
+      var btn = document.getElementById('btn-copy-code');
+      var kode = el ? el.textContent.trim() : '';
+      if (!kode || kode === '-') return;
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(kode);
+      }
+      if (btn) {
+        btn.textContent = 'Tersalin ✓';
+        setTimeout(function () {
+          btn.textContent = 'Salin';
+        }, 1500);
+      }
+    }
+
     // Submit form checkout (POST /api/checkout)
     var formCheckout = document.getElementById('checkout-form');
     if (formCheckout) {
@@ -266,10 +283,23 @@
           var listEl = document.getElementById('cart-items-container');
           if (listEl) listEl.innerHTML = '';
 
+          var kodeBaru = (data.data && data.data.kode_pesanan) || '';
           var receiptCode = document.getElementById('receipt-code');
           var receiptTotal = document.getElementById('receipt-total');
-          if (receiptCode) receiptCode.textContent = (data.data && data.data.kode_pesanan) || '-';
+          var btnLacak = document.getElementById('btn-lacak-receipt');
+
+          if (receiptCode) receiptCode.textContent = kodeBaru || '-';
           if (receiptTotal) receiptTotal.textContent = formatRp(data.data && data.data.total_harga);
+
+          if (kodeBaru) {
+            try {
+              localStorage.setItem('kriya-last-order-v1', kodeBaru);
+            } catch (e) {}
+            if (btnLacak) {
+              btnLacak.href = '/lacak?kode=' + encodeURIComponent(kodeBaru);
+            }
+          }
+
           if (okBox) okBox.classList.remove('hidden');
         } catch (err) {
           if (errBox) {
@@ -470,6 +500,7 @@
     });
 
     // Ekspos fungsi global untuk atribut onclick/onsubmit di EJS
+    window.salinKodePesanan = salinKodePesanan;
     window.tambahDariTombol = tambahDariTombol;
     window.bukaKeranjang = bukaKeranjang;
     window.tutupKeranjang = tutupKeranjang;
