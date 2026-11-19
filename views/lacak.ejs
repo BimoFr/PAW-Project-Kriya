@@ -1,0 +1,117 @@
+<%- include('partials/head', { title }) %>
+<%- include('partials/navbar') %>
+
+<main class="max-w-2xl mx-auto px-5 sm:px-8 py-14 sm:py-20">
+  <div class="text-center">
+    <p class="text-xs font-medium uppercase tracking-widest text-soga">Status Transaksi</p>
+    <h1 class="font-display text-3xl sm:text-4xl font-semibold text-ink mt-1">Lacak Pesanan</h1>
+    <p class="text-sm text-muted mt-2">Masukkan kode pesanan untuk melihat perkembangan verifikasi dan pengiriman kain Anda.</p>
+  </div>
+
+  <!-- Form Pencarian Kode Pesanan -->
+  <form id="form-lacak" action="/lacak" method="GET" class="mt-8 flex flex-col sm:flex-row gap-2.5">
+    <input id="input-kode-lacak" type="text" name="kode" value="<%= kode %>" required
+           placeholder="Contoh: KRY-707010"
+           class="flex-1 px-4 py-3 rounded-xl border border-line bg-white text-sm font-mono uppercase text-ink placeholder:normal-case placeholder:font-sans placeholder:text-muted focus:outline-none focus:border-ink">
+    <button type="submit"
+            class="px-6 py-3 rounded-xl bg-ink text-paper text-sm font-medium hover:bg-soga transition-colors shrink-0">
+      Cek Status
+    </button>
+  </form>
+
+  <% if (errorPesan) { %>
+    <div class="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3.5 text-xs text-red-700">
+      <%= errorPesan %>
+    </div>
+  <% } %>
+
+  <% if (pesanan) {
+    let items = [];
+    try {
+      items = Array.isArray(pesanan.daftar_item)
+        ? pesanan.daftar_item
+        : JSON.parse(pesanan.daftar_item || '[]');
+    } catch (e) { items = []; }
+
+    const st = (pesanan.status || '').trim();
+    let tahap = 0;
+    if (st === 'Dikirim' || st === 'Proses Kirim' || st === 'Diproses') tahap = 1;
+    if (st === 'Selesai' || st === 'Pesanan Selesai') tahap = 2;
+  %>
+    <section class="mt-8 bg-white border border-line rounded-2xl p-6 space-y-6">
+      <!-- Header Kartu Hasil -->
+      <div class="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-line">
+        <div>
+          <p class="text-[11px] uppercase tracking-wider text-muted">Kode Pesanan</p>
+          <p class="font-mono font-semibold text-base text-ink mt-0.5"><%= pesanan.kode_pesanan %></p>
+        </div>
+        <span class="px-3 py-1 rounded-full text-xs font-medium <%= tahap === 2 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-soga/10 text-soga border border-soga/30' %>">
+          <%= pesanan.status %>
+        </span>
+      </div>
+
+      <!-- Stepper 3 Tahap -->
+      <div class="grid grid-cols-3 gap-2 text-center">
+        <div class="p-3 rounded-xl border <%= tahap >= 0 ? 'border-ink bg-paper/70 text-ink' : 'border-line text-muted' %>">
+          <p class="text-[11px] font-semibold">1. Verifikasi</p>
+          <p class="text-[11px] text-muted mt-0.5">Menunggu konfirmasi</p>
+        </div>
+        <div class="p-3 rounded-xl border <%= tahap >= 1 ? 'border-ink bg-paper/70 text-ink' : 'border-line text-muted' %>">
+          <p class="text-[11px] font-semibold">2. Dikirim</p>
+          <p class="text-[11px] text-muted mt-0.5">Kain dalam pengiriman</p>
+        </div>
+        <div class="p-3 rounded-xl border <%= tahap >= 2 ? 'border-emerald-600 bg-emerald-50/70 text-emerald-800' : 'border-line text-muted' %>">
+          <p class="text-[11px] font-semibold">3. Selesai</p>
+          <p class="text-[11px] text-muted mt-0.5">Pesanan diterima</p>
+        </div>
+      </div>
+
+      <!-- Detail Ringkas Penerima & Item -->
+      <div class="space-y-3 text-xs pt-1">
+        <div class="flex justify-between gap-4">
+          <span class="text-muted">Penerima</span>
+          <span class="font-medium text-ink text-right"><%= pesanan.nama_pembeli %></span>
+        </div>
+        <div class="flex justify-between gap-4">
+          <span class="text-muted">Alamat Tujuan</span>
+          <span class="font-medium text-ink text-right max-w-xs"><%= pesanan.alamat %></span>
+        </div>
+
+        <div class="pt-3 border-t border-line">
+          <p class="text-muted mb-2">Rincian Kain:</p>
+          <ul class="space-y-1.5">
+            <% items.forEach((it) => { %>
+              <li class="flex justify-between text-ink">
+                <span><%= it.nama || it.nama_produk %> &times; <%= it.qty %></span>
+                <span class="tabular-nums">Rp <%= Number((it.harga || 0) * (it.qty || 1)).toLocaleString('id-ID') %></span>
+              </li>
+            <% }) %>
+          </ul>
+        </div>
+
+        <div class="pt-3 border-t border-line flex justify-between items-center text-sm font-semibold text-ink">
+          <span>Total Pembayaran</span>
+          <span class="tabular-nums text-soga">Rp <%= Number(pesanan.total_harga).toLocaleString('id-ID') %></span>
+        </div>
+      </div>
+    </section>
+  <% } %>
+</main>
+
+<script>
+  // Isi otomatis dari riwayat pesanan terakhir di browser jika kolom masih kosong
+  (function () {
+    var input = document.getElementById('input-kode-lacak');
+    if (input && !input.value.trim()) {
+      try {
+        var tersimpan = localStorage.getItem('kriya-last-order-v1');
+        if (tersimpan) input.value = tersimpan;
+      } catch (e) {}
+    }
+  })();
+</script>
+
+<%- include('partials/chat-widget') %>
+<%- include('partials/cart-drawer') %>
+<%- include('partials/footer') %>
+<%- include('partials/scripts') %>
