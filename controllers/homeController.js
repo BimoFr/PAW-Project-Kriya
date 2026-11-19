@@ -22,4 +22,27 @@ const kelola = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { index, kelola };
+const lacak = asyncHandler(async (req, res) => {
+  const kode = (req.query.kode || '').trim().toUpperCase();
+  let pesanan = null;
+  let errorPesan = null;
+
+  if (kode) {
+    pesanan = await Pesanan.findOne({
+      where: { kode_pesanan: kode },
+    });
+
+    if (!pesanan) {
+      errorPesan = `Kode pesanan "${kode}" tidak ditemukan. Periksa kembali kode transaksi Anda.`;
+    }
+  }
+
+  res.render('lacak', {
+    title: 'Lacak Pesanan — Kriya',
+    kode,
+    pesanan,
+    errorPesan,
+  });
+});
+
+module.exports = { index, kelola, lacak };
