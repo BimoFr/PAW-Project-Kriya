@@ -6,6 +6,7 @@ const router = express.Router();
 
 // Halaman publik
 router.get('/', homeController.index);
+router.get('/lacak', homeController.lacak);
 
 // Autentikasi pengelola (akses manual lewat /masuk)
 router.get('/masuk', (req, res) => {
