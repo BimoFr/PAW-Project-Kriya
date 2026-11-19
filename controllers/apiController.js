@@ -221,7 +221,7 @@ const ubahStatusPesanan = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    const statusValid = ['Menunggu Verifikasi', 'Proses Kirim', 'Pesanan Selesai'];
+    const statusValid = ['Menunggu Verifikasi', 'Dikirim', 'Proses Kirim', 'Pesanan Selesai'];
 
     if (!statusValid.includes(status)) {
       return res.status(400).json({ error: 'Status pesanan tidak valid.' });
