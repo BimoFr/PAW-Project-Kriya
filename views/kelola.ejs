@@ -12,22 +12,10 @@
 
 <main class="max-w-5xl mx-auto px-4 sm:px-6 py-10 space-y-10">
   <!-- Header Halaman Admin -->
-  <section class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-line pb-6">
-    <div>
-      <p class="text-xs font-medium uppercase tracking-widest text-soga">Panel Pengrajin</p>
-      <h1 class="font-display text-2xl sm:text-3xl font-semibold text-ink mt-1">Kelola Produk &amp; Pesanan</h1>
-      <p class="text-sm text-muted mt-1">Atur katalog kain, buat deskripsi otomatis dengan AI, dan perbarui status transaksi.</p>
-    </div>
-    <div class="flex items-center gap-2.5">
-      <a href="/" class="px-3.5 py-2 rounded-lg border border-line bg-white text-xs font-medium text-ink hover:border-ink transition-colors">
-        Lihat Katalog &rarr;
-      </a>
-      <form action="/keluar" method="POST" class="inline">
-        <button type="submit" class="px-3.5 py-2 rounded-lg border border-line bg-white text-xs font-medium text-muted hover:text-ink hover:border-ink transition-colors">
-          Keluar
-        </button>
-      </form>
-    </div>
+  <section class="border-b border-line pb-6">
+    <p class="text-xs font-medium uppercase tracking-widest text-soga">Panel Pengrajin</p>
+    <h1 class="font-display text-2xl sm:text-3xl font-semibold text-ink mt-1">Kelola Produk &amp; Pesanan</h1>
+    <p class="text-sm text-muted mt-1">Atur katalog kain, buat deskripsi otomatis dengan AI, dan perbarui status transaksi.</p>
   </section>
 
   <!-- Ringkasan Singkat & Laporan Penjualan (F-05) -->
@@ -132,7 +120,7 @@
                   <select id="status-ord-<%= o.id %>"
                           class="px-2.5 py-1.5 rounded-lg border border-line bg-paper/60 text-xs font-medium text-ink focus:outline-none focus:border-ink">
                     <option value="Menunggu Verifikasi" <%= o.status === 'Menunggu Verifikasi' ? 'selected' : '' %>>Menunggu Verifikasi</option>
-                    <option value="Proses Kirim" <%= (o.status === 'Proses Kirim' || o.status === 'Diproses' || o.status === 'Dikirim') ? 'selected' : '' %>>Proses Kirim</option>
+                    <option value="Dikirim" <%= (o.status === 'Dikirim' || o.status === 'Proses Kirim' || o.status === 'Diproses') ? 'selected' : '' %>>Dikirim</option>
                     <option value="Pesanan Selesai" <%= o.status === 'Pesanan Selesai' ? 'selected' : '' %>>Pesanan Selesai</option>
                   </select>
                   <button type="button" data-id="<%= o.id %>" onclick="simpanStatusPesanan(this.dataset.id)"
