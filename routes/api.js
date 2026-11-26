@@ -9,7 +9,11 @@ const uploadMod = require('../middlewares/upload');
 
 const authAdmin = typeof authAdminMod === 'function'
   ? authAdminMod
-  : (authAdminMod.authAdmin || authAdminMod.wajibAdmin || ((req, res, next) => next()));
+  : (authAdminMod.cekAdminApi || authAdminMod.authAdmin || authAdminMod.wajibAdmin);
+
+if (typeof authAdmin !== 'function') {
+  throw new Error('Middleware cekAdminApi tidak ditemukan di middlewares/authAdmin.js');
+}
 
 function buatMulterFallback(subFolder, fieldName) {
   const dir = path.join(__dirname, '..', 'public', 'images', subFolder);
