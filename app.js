@@ -1,6 +1,6 @@
 const path = require('path');
 const express = require('express');
-const session = require('express-session'); // <-- TAMBAHAN 1
+const session = require('express-session');
 const config = require('./config');
 const logger = require('./middlewares/logger');
 const errorHandler = require('./middlewares/errorHandler');
@@ -21,13 +21,13 @@ app.locals.formatRupiah = formatRupiah;
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(logger);
 app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // <-- TAMBAHAN 2 (wajib untuk form POST /masuk)
+app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
   secret: process.env.SESSION_SECRET || 'kriya_secret_key',
   resave: false,
   saveUninitialized: false,
-  cookie: { httpOnly: true, maxAge: 1000 * 60 * 60 * 4 } // 4 jam
+  cookie: { httpOnly: true, maxAge: 1000 * 60 * 60 * 4 }
 }));
 
 // Teruskan status login ke semua template EJS
@@ -48,7 +48,7 @@ app.use(errorHandler);
 
 function pesanDatabase(err) {
   const kode = (err.parent && err.parent.code) || (err.original && err.original.code) || err.code || '';
-  if (kode === 'ECONNREFUSED') return 'MySQL belum berjalan atau host/port salah. Klik "Start All" di Laragon, lalu cek DB_HOST dan DB_PORT di .env.';
+  if (kode === 'ECONNREFUSED') return 'MySQL belum berjalan atau host/port salah. Klik "Start All" di Laragon/XAMPP, lalu cek DB_HOST dan DB_PORT di .env.';
   if (kode === 'ER_ACCESS_DENIED_ERROR') return 'Username atau password salah. Cek DB_USER dan DB_PASSWORD di .env.';
   return err.message;
 }
@@ -66,4 +66,8 @@ async function start() {
   }
 }
 
-start();
+if (require.main === module) {
+  start();
+}
+
+module.exports = app;
