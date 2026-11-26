@@ -1,6 +1,8 @@
 const express = require('express');
+const bcrypt = require('bcrypt');
 const homeController = require('../controllers/homeController');
 const { cekAdminWeb } = require('../middlewares/authAdmin');
+const Admin = require('../models/adminModels');
 
 const router = express.Router();
 
@@ -16,16 +18,45 @@ router.get('/masuk', (req, res) => {
   res.render('masuk', { title: 'Masuk Pengelola — Kriya', error: null });
 });
 
-router.post('/masuk', (req, res) => {
-  const { username, password } = req.body;
-  if (username === process.env.ADMIN_USER && password === process.env.ADMIN_PASS) {
+router.post('/masuk', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).render('masuk', {
+        title: 'Masuk Pengelola — Kriya',
+        error: 'Username dan password wajib diisi.'
+      });
+    }
+
+    const admin = await Admin.findOne({ where: { username: username.trim() } });
+    if (!admin) {
+      return res.status(401).render('masuk', {
+        title: 'Masuk Pengelola — Kriya',
+        error: 'Username atau password salah.'
+      });
+    }
+
+    const passwordCocok = await bcrypt.compare(password, admin.password);
+    if (!passwordCocok) {
+      return res.status(401).render('masuk', {
+        title: 'Masuk Pengelola — Kriya',
+        error: 'Username atau password salah.'
+      });
+    }
+
     req.session.isAdmin = true;
+    req.session.adminId = admin.id;
+    req.session.adminRole = admin.role;
+
     return res.redirect('/kelola');
+  } catch (err) {
+    console.error('Error saat login admin:', err);
+    return res.status(500).render('masuk', {
+      title: 'Masuk Pengelola — Kriya',
+      error: 'Terjadi kesalahan pada server.'
+    });
   }
-  res.status(401).render('masuk', {
-    title: 'Masuk Pengelola — Kriya',
-    error: 'Username atau password salah.'
-  });
 });
 
 router.post('/keluar', (req, res) => {
